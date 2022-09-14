@@ -1,0 +1,24 @@
+[[package]]
+name = "lor-deckcodes"
+version = "5.0.0"
+description = "Legends of Runeterra deck coder and decoder"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
+name = "xlsxwriter"
+version = "3.0.3"
+description = "A Python module for creating Excel XLSX files."
+category = "main"
+optional = false
+python-versions = ">=3.4"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.10"
+content-hash = "06210fb637f984e52766422dc8634e8a8ba55cb62cc95a642bc53e4ad0171f00"
+
+[metadata.files]
+lor-deckcodes = []
+xlsxwriter = []

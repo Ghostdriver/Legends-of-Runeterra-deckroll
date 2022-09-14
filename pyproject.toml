@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "legends of runeterra deckroll"
+version = "0.1.0"
+description = ""
+authors = ["Ghostdriver <mattes.hupp@t-online.de>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+lor-deckcodes = "^5.0.0"
+XlsxWriter = "^3.0.3"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
