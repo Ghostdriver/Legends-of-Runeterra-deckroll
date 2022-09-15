@@ -6,6 +6,7 @@ import random
 from datetime import date
 import xlsxwriter
 import time
+import copy
 
 all_regions = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 region_weights: List[int] = [1] * len(all_regions)
@@ -119,11 +120,14 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
     runeterra_champ_weights: List[int] = []
     remaining_deck_slots = total_amount_cards
     remaining_champ_slots = amount_champs
-    if not weight_cards:
+    if weight_cards:
+        card_weights: List[int] = copy.deepcopy(card_weights)
+    else:
         card_weights: List[int] = [1] * len(allowed_cards)
-    if not weight_regions:
+    if weight_regions:
+        region_weights: List[int] = copy.deepcopy(region_weights)
+    else:
         region_weights: List[int] = [1] * len(regions)
-
     # Monoregion deck
     if mono_region_chance > random.randrange(100):
         # Don't allow Runeterra as Mono-Region, because the card pool is too small
@@ -429,5 +433,5 @@ def create_mm_reroll_spreadsheat(amount_decks: int, allowed_cards: List[lor_card
 #         card_weights[index] = 10
 #create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 
-create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
-create_mm_reroll_spreadsheat(amount_decks=1000, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+#create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+create_mm_reroll_spreadsheat(amount_decks=30, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
