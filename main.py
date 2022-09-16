@@ -370,6 +370,8 @@ def multiple_deckrolls_and_removing_rolled_cards(amount_decks: int, allowed_card
     rolled_decks: List[str] = []
     allowed_cards = copy.deepcopy(allowed_cards)
     card_weights = copy.deepcopy(card_weights)
+    regions = copy.deepcopy(regions)
+    region_weights = copy.deepcopy(region_weights)
     for i in range(amount_decks):
         deck_code = deckroll(allowed_cards=allowed_cards, weight_cards=weight_cards, card_weights=card_weights, total_amount_cards=total_amount_cards, amount_champs=amount_champs, regions=regions, weight_regions=weight_regions, region_weights=region_weights, mono_region_chance=mono_region_chance, allow_two_runeterra_champs = allow_two_runeterra_champs, one_of_chance=one_of_chance, two_of_chance=two_of_chance, three_of_chance=three_of_chance, fill_up_one_and_two_ofs_if_out_of_rollable_cards=fill_up_one_and_two_ofs_if_out_of_rollable_cards)
         rolled_decks.append(deck_code)
@@ -380,6 +382,15 @@ def multiple_deckrolls_and_removing_rolled_cards(amount_decks: int, allowed_card
                     if allowed_card.card_code == deck_card.card_code:
                         del allowed_cards[index]
                         del card_weights[index]
+                        # Runeterra can be excluded from the list if all champs are rolled
+                        if "Runeterra" in allowed_card.region_refs:
+                            not_rolled_runeterra_champs = 0
+                            for allowed_card in allowed_cards:
+                                if "Runeterra" in allowed_card.region_refs:
+                                    not_rolled_runeterra_champs += 1
+                            if not_rolled_runeterra_champs == 0:
+                                del region_weights[regions.index("Runeterra")]
+                                del regions[regions.index("Runeterra")]
                         break
     return rolled_decks
 
