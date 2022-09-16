@@ -103,11 +103,11 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
     if amount_champs > total_amount_cards:
         return "Error - the total amount of cards has to be higher than the amount of champs"
     if "Runeterra" in regions and amount_champs == 0:
-        "Error - Runeterra can't be in the allowed regions without any champs allowed"
+        return "Error - Runeterra can't be in the allowed regions without any champs allowed"
     if weight_cards and len(allowed_cards) != len(card_weights):
-        "Error - The length of given cards and card weights has to be equal, when cards should be weighted"
+        return "Error - The length of given cards and card weights has to be equal, when cards should be weighted"
     if weight_regions and len(regions) != len(region_weights):
-        "Error - The length of given regions and region weights has to be equal, when cards should be weighted"
+        return "Error - The length of given regions and region weights has to be equal, when cards should be weighted"
     rolled_regions: List[str] = []
     # rolled deck is a dictionary, that consists of card-codes and amount of the card
     rolled_deck: dict[str, int] = {}
@@ -365,6 +365,24 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
     deck_code = lor_deck.encode()
     return deck_code
 
+def multiple_deckrolls_and_removing_rolled_cards(amount_decks: int, allowed_cards: List[lor_card] = collectible_cards, weight_cards: bool = False, card_weights: List[int] = card_weights, total_amount_cards: int = 40, amount_champs: int = 6, regions: List[str] = all_regions, weight_regions: bool = False, region_weights: List[int] = region_weights, mono_region_chance: int = 0, allow_two_runeterra_champs: bool = True, one_of_chance: int = 20, two_of_chance: int = 30, three_of_chance: int = 50, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool = True) -> List[str]:
+    '''Creates a Excel-File with numbers and decks with the specified deckroll modifications and with a card_pool, that gets smaller each deck'''
+    rolled_decks: List[str] = []
+    allowed_cards = copy.deepcopy(allowed_cards)
+    card_weights = copy.deepcopy(card_weights)
+    for i in range(amount_decks):
+        deck_code = deckroll(allowed_cards=allowed_cards, weight_cards=weight_cards, card_weights=card_weights, total_amount_cards=total_amount_cards, amount_champs=amount_champs, regions=regions, weight_regions=weight_regions, region_weights=region_weights, mono_region_chance=mono_region_chance, allow_two_runeterra_champs = allow_two_runeterra_champs, one_of_chance=one_of_chance, two_of_chance=two_of_chance, three_of_chance=three_of_chance, fill_up_one_and_two_ofs_if_out_of_rollable_cards=fill_up_one_and_two_ofs_if_out_of_rollable_cards)
+        rolled_decks.append(deck_code)
+        if not deck_code.startswith("Error"):
+            deck = lor_deckcodes.LoRDeck.from_deckcode(deck_code)
+            for deck_card in deck.cards:
+                for index, allowed_card in enumerate(allowed_cards):
+                    if allowed_card.card_code == deck_card.card_code:
+                        del allowed_cards[index]
+                        del card_weights[index]
+                        break
+    return rolled_decks
+
 def create_tournament_spreadsheat(amount_players: int, amount_decks_per_player: int = 1, link_to_website_for_showing_the_deck: bool = False, link_prefix_before_deck_code: str = "", allowed_cards: List[lor_card] = collectible_cards, weight_cards: bool = False, card_weights: List[int] = card_weights, total_amount_cards: int = 40, amount_champs: int = 6, regions: List[str] = all_regions, weight_regions: bool = False, region_weights: List[int] = region_weights, mono_region_chance: int = 0, allow_two_runeterra_champs: bool = True, one_of_chance: int = 20, two_of_chance: int = 30, three_of_chance: int = 50, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool = True) -> None:
     '''Creates a Excel-File for the given amount players and decks_per_player and the specified deckroll modifications'''
     start_time = time.time()
@@ -434,4 +452,5 @@ def create_mm_reroll_spreadsheat(amount_decks: int, allowed_cards: List[lor_card
 #create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 
 #create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
-create_mm_reroll_spreadsheat(amount_decks=30, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+#create_mm_reroll_spreadsheat(amount_decks=30, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+print(multiple_deckrolls_and_removing_rolled_cards(50))
