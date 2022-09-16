@@ -20,11 +20,11 @@ There are two other related functions made for Monday Madness, a tournament wort
 Use these functions, if they better suit your usecase.
 
 Examples for modifying a deckroll:
-# Make Region Runeterra very likely:
+- Make Region Runeterra very likely:
 region_weights[all_regions.index("Runeterra")] = 20
-# Exclude a region:
+- Exclude a region:
 region_weights[all_regions.index("Demacia")] = 0
-# Make newest cards more likely:
+- Make newest cards more likely:
 for index, card in enumerate(collectible_cards):
     if card.card_set == "Set6":
         card_weights[index] = 10
