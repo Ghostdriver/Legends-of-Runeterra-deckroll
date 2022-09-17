@@ -7,6 +7,7 @@ from datetime import date
 import xlsxwriter
 import time
 import copy
+import string
 
 all_regions = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 region_weights: List[int] = [1] * len(all_regions)
@@ -452,6 +453,24 @@ def create_mm_reroll_spreadsheat(amount_decks: int, allowed_cards: List[lor_card
     end_time = time.time()
     print(f"finished after {str(round(end_time-start_time, 3))} seconds - {filename} was created in the current folder")
 
+default_allowed_letters: List[str] = list(string.ascii_letters + "!" + "?" + "." + " ")
+def create_txt_file_with_card_names(allowed_cards: List[lor_card] = collectible_cards, allowed_letters: List[str] = default_allowed_letters) -> None:
+    # This text file can be used for scribbl with custom words
+    card_names_formatted: List[str] = []
+    for allowed_card in allowed_cards:
+        card_name = allowed_card.name
+        card_name_formatted = ""
+        for letter in card_name:
+            if letter in allowed_letters:
+                card_name_formatted += letter
+        card_names_formatted.append(card_name_formatted)
+    date_today = str(date.today())
+    filename = f"Card names {date_today}.txt"
+    with open(filename, "w") as file:
+        file.write(str(card_names_formatted))
+    print(f"{filename} was created in the current folder")
+
+
 # Make Region Runeterra very likely:
 # region_weights[all_regions.index("Runeterra")] = 20
 # Exclude a region:
@@ -464,4 +483,5 @@ def create_mm_reroll_spreadsheat(amount_decks: int, allowed_cards: List[lor_card
 
 #create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 #create_mm_reroll_spreadsheat(amount_decks=30, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
-print(multiple_deckrolls_and_removing_rolled_cards(50))
+#print(multiple_deckrolls_and_removing_rolled_cards(50))
+create_txt_file_with_card_names()
