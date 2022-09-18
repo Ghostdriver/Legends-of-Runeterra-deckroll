@@ -83,7 +83,7 @@ for collectible_card in collectible_cards:
                         jhin_followers.append(collectible_card)
                     break
 
-def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bool = False, card_weights: List[int] = card_weights, total_amount_cards: int = 40, amount_champs: int = 6, regions: List[str] = all_regions, weight_regions: bool = False, region_weights: List[int] = region_weights, mono_region_chance: int = 0, allow_two_runeterra_champs: bool = True, one_of_chance: int = 20, two_of_chance: int = 30, three_of_chance: int = 50, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool = True) -> str:
+def check_input_parameters(allowed_cards: List[lor_card], weight_cards: bool, card_weights: List[int], total_amount_cards: int, amount_champs: int, regions: List[str], weight_regions: bool, region_weights: List[int], mono_region_chance: int, allow_two_runeterra_champs: bool, one_of_chance: int, two_of_chance: int, three_of_chance: int, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool) -> None | str:
     # A few exceptions -- not all problematic cases are solved/detected
     if len(allowed_cards) < 1 or (weight_cards and sum(card_weights) == 0):
         return "Error - there has to be atleast one allowed card and the sum of chances can't be 0, if weights are enabled"
@@ -109,16 +109,212 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
         return "Error - The length of given cards and card weights has to be equal, when cards should be weighted"
     if weight_regions and len(regions) != len(region_weights):
         return "Error - The length of given regions and region weights has to be equal, when cards should be weighted"
+    return None
+
+def roll_regions(amount_champs: int, regions: List[str], region_weights: List[int], mono_region_chance: int, allow_two_runeterra_champs: bool) -> List[str]:
     rolled_regions: List[str] = []
+    # Monoregion deck
+    if mono_region_chance > random.randrange(100):
+        # Don't allow Runeterra as Mono-Region, because the card pool is too small
+        if "Runeterra" in regions:
+            region_weights[regions.index("Runeterra")] = 0
+        rolled_region = random.choices(regions, weights=region_weights)[0]
+        rolled_regions.append(rolled_region)
+    # Two region deck
+    else:
+        for i in range(2):
+            rolled_region = random.choices(regions, weights=region_weights)[0]
+            rolled_regions.append(rolled_region)
+            # Prevents duplicated rolled region
+            if not (allow_two_runeterra_champs and amount_champs > 1 and rolled_region == "Runeterra"):
+                region_weights[regions.index(rolled_region)] = 0
+    return rolled_regions
+
+def init_runeterra_champs(allowed_cards: List[lor_card], card_weights: List[int], runeterra_champs: List[lor_card], runeterra_champ_weights: List[int]) -> None:
+    for index, allowed_card in enumerate(allowed_cards):
+        if "Runeterra" in allowed_card.region_refs and allowed_card.is_champ and allowed_card not in runeterra_champs:
+            runeterra_champs.append(allowed_card)
+            runeterra_champ_weights.append(card_weights[index])
+
+def roll_runeterra_champs(runeterra_champs: List[lor_card], runeterra_champ_weights: List[int]) -> List[lor_card]:
+    rolled_runeterra_champs: List[lor_card] = []
+    for i in range(2):
+        rolled_runeterra_champ = random.choices(runeterra_champs, weights=runeterra_champ_weights)[0]
+        rolled_runeterra_champs.append(rolled_runeterra_champ)
+        runeterra_champ_weights[runeterra_champs.index(rolled_runeterra_champ)] = 0
+    return rolled_runeterra_champs
+
+def add_runeterra_champs_to_deck(rolled_deck: dict[str, int], remaining_champ_slots: int, rolled_runeterra_champs: List[lor_card], card_amount_chances: List[int]) -> int:
+    if len(rolled_runeterra_champs) == 1:
+        if remaining_champ_slots == 1:
+            rolled_amount = 1
+            rolled_deck[rolled_runeterra_champs[0].card_code] = rolled_amount
+        elif remaining_champ_slots == 2:
+            rolled_amount = random.choices(range(1, 3), weights=card_amount_chances[0:2])[0]
+            rolled_deck[rolled_runeterra_champs[0].card_code] = rolled_amount
+        else:
+            rolled_amount = random.choices(range(1, 4), weights=card_amount_chances)[0]
+            rolled_deck[rolled_runeterra_champs[0].card_code] = rolled_amount
+        return rolled_amount
+    elif len(rolled_runeterra_champs) == 2:
+        if remaining_champ_slots >= 6:
+            rolled_deck[rolled_runeterra_champs[0].card_code] = 3
+            rolled_deck[rolled_runeterra_champs[1].card_code] = 3
+        elif remaining_champ_slots % 2 == 0:
+            rolled_deck[rolled_runeterra_champs[0].card_code] = remaining_champ_slots // 2
+            rolled_deck[rolled_runeterra_champs[1].card_code] = remaining_champ_slots // 2
+        else:
+            rolled_deck[rolled_runeterra_champs[0].card_code] = remaining_champ_slots // 2 + 1
+            rolled_deck[rolled_runeterra_champs[1].card_code] = remaining_champ_slots // 2
+        if remaining_champ_slots > 6:
+            return 6
+        else:
+            return remaining_champ_slots
+
+def add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_cards: List[lor_card], card_weights:List[int], rolled_runeterra_champs: List[lor_card], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights=List[int]) -> None:
+    rolled_runeterra_champ_names = []
+    for rolled_runeterra_champ in rolled_runeterra_champs:
+        rolled_runeterra_champ_names.append(rolled_runeterra_champ.name)
+    if "Bard" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            # "06RU001T3" is the Chime Card
+            if "06RU001T3" in allowed_card.associated_card_refs and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+    if "Evelynn" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if "Husk" in allowed_card.description_raw and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+    if "Jax" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if "WEAPONMASTER" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+    if "Jhin" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if allowed_card in jhin_followers and allowed_card not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+    if "Kayn" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if "CULTIST" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+
+def add_rollable_cards_and_weights_for_rolled_regions_other_than_runeterra(allowed_cards: List[lor_card], rolled_regions: List[str], rollable_champ_card_codes: List[str], rollable_champ_weights: List[int], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights: List[int]) -> None:
+    for rolled_region in rolled_regions:
+        if rolled_region != "Runeterra":
+            for index, allowed_card in enumerate(allowed_cards):
+                if rolled_region in allowed_card.region_refs and allowed_card.is_champ and allowed_card.card_code not in rollable_champ_card_codes:
+                    rollable_champ_card_codes.append(allowed_card.card_code)
+                    rollable_champ_weights.append(card_weights[index])
+                elif rolled_region in allowed_card.region_refs and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                    rollable_non_champ_card_codes.append(allowed_card.card_code)
+                    rollable_non_champ_weights.append(card_weights[index])
+
+def roll_non_runeterra_champs(rolled_deck: dict[str, int], remaining_champ_slots: int, card_amount_chances: List[int], rollable_champ_card_codes: List[str], rollable_champ_weights: List[int]) -> int:
+    amount_cards_added_to_the_deck: int = 0
+    total_rollable_champ_weights: int = sum(rollable_champ_weights)
+    while remaining_champ_slots > 0:
+        if total_rollable_champ_weights == 0:
+            break
+        rolled_champ = random.choices(rollable_champ_card_codes, weights=rollable_champ_weights)[0]
+        # Remove card from pool by settings the chance of rolling it to 0
+        total_rollable_champ_weights -= rollable_champ_weights[rollable_champ_card_codes.index(rolled_champ)]
+        rollable_champ_weights[rollable_champ_card_codes.index(rolled_champ)] = 0
+        if remaining_champ_slots == 1:
+            rolled_amount = 1
+        elif remaining_champ_slots == 2:
+            rolled_amount = random.choices(range(1, 3), weights=card_amount_chances[0:2])[0]
+        else:
+            rolled_amount = random.choices(range(1, 4), weights=card_amount_chances)[0]
+        rolled_deck[rolled_champ] = rolled_amount
+        remaining_champ_slots -= rolled_amount
+        amount_cards_added_to_the_deck += rolled_amount
+    return amount_cards_added_to_the_deck
+
+def fill_up_champ_one_and_two_ofs(rolled_deck: dict[str, int], remaining_champ_slots=int) -> int:
+    amount_cards_added_to_the_deck: int = 0
+    for key, value in rolled_deck.items():
+        if remaining_champ_slots == 0:
+            break
+        if value == 1 and remaining_champ_slots == 1:
+            rolled_deck[key] = 2
+            remaining_champ_slots -= 1
+            amount_cards_added_to_the_deck += 1
+        elif value == 1 and remaining_champ_slots > 1:
+            rolled_deck[key] = 3
+            remaining_champ_slots -= 2
+            amount_cards_added_to_the_deck += 2
+        elif value == 2 and remaining_champ_slots >= 1:
+            rolled_deck[key] = 3
+            remaining_champ_slots -= 1
+            amount_cards_added_to_the_deck += 1
+    return amount_cards_added_to_the_deck
+            
+def roll_non_champs(rolled_deck: dict[str, int], remaining_deck_slots: int, card_amount_chances: List[int], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights: List[int]) -> int:
+    amount_cards_added_to_the_deck: int = 0
+    total_rollable_non_champ_weights: int = sum(rollable_non_champ_weights)
+    while remaining_deck_slots > 0:
+        if total_rollable_non_champ_weights == 0:
+            break
+        rolled_non_champ = random.choices(rollable_non_champ_card_codes, weights=rollable_non_champ_weights)[0]
+        # Remove card from pool by settings the chance of rolling it to 0
+        total_rollable_non_champ_weights -= rollable_non_champ_weights[rollable_non_champ_card_codes.index(rolled_non_champ)]
+        rollable_non_champ_weights[rollable_non_champ_card_codes.index(rolled_non_champ)] = 0
+        if remaining_deck_slots == 1:
+            rolled_amount = 1
+        elif remaining_deck_slots == 2:
+            rolled_amount = random.choices(range(1, 3), weights=card_amount_chances[0:2])[0]
+        else:
+            rolled_amount = random.choices(range(1, 4), weights=card_amount_chances)[0]
+        rolled_deck[rolled_non_champ] = rolled_amount
+        remaining_deck_slots -= rolled_amount
+        amount_cards_added_to_the_deck += rolled_amount
+    return amount_cards_added_to_the_deck
+
+def fill_up_non_champ_one_and_two_ofs(rolled_deck: dict[str, int], remaining_deck_slots=int) -> int:
+    amount_cards_added_to_the_deck: int = 0
+    for key, value in rolled_deck.items():
+        if remaining_deck_slots == 0:
+            break
+        if value == 1 and remaining_deck_slots == 1:
+            rolled_deck[key] = 2
+            remaining_deck_slots -= 1
+            amount_cards_added_to_the_deck += 1
+        elif value == 1 and remaining_deck_slots > 1:
+            rolled_deck[key] = 3
+            remaining_deck_slots -= 2
+            amount_cards_added_to_the_deck += 2
+        elif value == 2 and remaining_deck_slots >= 1:
+            rolled_deck[key] = 3
+            remaining_deck_slots -= 1
+            amount_cards_added_to_the_deck += 1
+    return amount_cards_added_to_the_deck
+
+def get_deckcode_for_rolled_deck(rolled_deck: dict[str, int]) -> str:
+    rolled_deck_formatted = []
+    for key, value in rolled_deck.items():
+        rolled_deck_formatted.append(f"{value}:{key}")
+    lor_deck = lor_deckcodes.LoRDeck(rolled_deck_formatted)
+    deck_code = lor_deck.encode()
+    return deck_code
+
+def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bool = False, card_weights: List[int] = card_weights, total_amount_cards: int = 40, amount_champs: int = 6, regions: List[str] = all_regions, weight_regions: bool = False, region_weights: List[int] = region_weights, mono_region_chance: int = 0, allow_two_runeterra_champs: bool = True, one_of_chance: int = 20, two_of_chance: int = 30, three_of_chance: int = 50, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool = True) -> str:
+    # CHECK INPUT PARAMETERS
+    error = check_input_parameters(allowed_cards=allowed_cards, weight_cards=weight_cards, card_weights=card_weights, total_amount_cards=total_amount_cards, amount_champs=amount_champs, regions=regions, weight_regions=weight_regions, region_weights=region_weights, mono_region_chance=mono_region_chance, allow_two_runeterra_champs=allow_two_runeterra_champs, one_of_chance=one_of_chance, two_of_chance=two_of_chance, three_of_chance=three_of_chance, fill_up_one_and_two_ofs_if_out_of_rollable_cards=fill_up_one_and_two_ofs_if_out_of_rollable_cards)
+    if error:
+        return error
+    
+    # INIT VARIABLES
     # rolled deck is a dictionary, that consists of card-codes and amount of the card
+    card_amount_chances: List[int] = [one_of_chance, two_of_chance, three_of_chance]
     rolled_deck: dict[str, int] = {}
-    # rollable champs and non champs is just a created list from 
     rollable_champ_card_codes: List[str] = []
     rollable_champ_weights: List[int] = []
     rollable_non_champ_card_codes: List[str] = []
     rollable_non_champ_weights: List[int] = []
-    runeterra_champs: List[lor_card] = []
-    runeterra_champ_weights: List[int] = []
     remaining_deck_slots = total_amount_cards
     remaining_champ_slots = amount_champs
     if weight_cards:
@@ -129,241 +325,63 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
         region_weights: List[int] = copy.deepcopy(region_weights)
     else:
         region_weights: List[int] = [1] * len(regions)
-    # Monoregion deck
-    if mono_region_chance > random.randrange(100):
-        # Don't allow Runeterra as Mono-Region, because the card pool is too small
-        if "Runeterra" in regions:
-            region_weights[regions.index("Runeterra")] = 0
-        rolled_region = random.choices(regions, weights=region_weights)[0]
-        rolled_regions.append(rolled_region)
-    else:
-        for i in range(2):
-            rolled_region = random.choices(regions, weights=region_weights)[0]
-            rolled_regions.append(rolled_region)
-            # Prevents duplicated rolled region
-            if not (allow_two_runeterra_champs and amount_champs > 1 and rolled_region == "Runeterra"):
-                region_weights[regions.index(rolled_region)] = 0
-    # Two Runeterra champs
-    if rolled_regions.count("Runeterra") == 2:
-        for index, allowed_card in enumerate(allowed_cards):
-            if "Runeterra" in allowed_card.region_refs and allowed_card.is_champ and allowed_card not in runeterra_champs:
-                runeterra_champs.append(allowed_card)
-                runeterra_champ_weights.append(card_weights[index])
-        if len(runeterra_champs) < 2:
-            return "Error - not enough Runeterra Champs for rolling included for a two runeterra champ deck"
-        rolled_runeterra_champs: List[lor_card] = []
-        for i in range(2):
-            rolled_runeterra_champ = random.choices(runeterra_champs, weights=runeterra_champ_weights)[0]
-            rolled_runeterra_champs.append(rolled_runeterra_champ)
-            runeterra_champ_weights[runeterra_champs.index(rolled_runeterra_champ)] = 0
-        if amount_champs >= 6:
-            rolled_deck[rolled_runeterra_champs[0].card_code] = 3
-            rolled_deck[rolled_runeterra_champs[1].card_code] = 3
-        elif amount_champs % 2 == 0:
-            rolled_deck[rolled_runeterra_champs[0].card_code] = amount_champs // 2
-            rolled_deck[rolled_runeterra_champs[1].card_code] = amount_champs // 2
-        else:
-            rolled_deck[rolled_runeterra_champs[0].card_code] = amount_champs // 2 + 1
-            rolled_deck[rolled_runeterra_champs[1].card_code] = amount_champs // 2
-        remaining_champ_slots = 0
-        if amount_champs >= 6:
-            remaining_deck_slots -= 6
-        else:
-            remaining_deck_slots -= amount_champs
-        # Add rollable non_champs for rolled Runeterra-Champs 
-        if rolled_runeterra_champs[0].name == "Bard" or rolled_runeterra_champs[1].name == "Bard":
-            for index, allowed_card in enumerate(allowed_cards):
-                # "06RU001T3" is the Chime Card
-                if "06RU001T3" in allowed_card.associated_card_refs and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champs[0].name == "Evelynn" or rolled_runeterra_champs[1].name == "Evelynn":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "Husk" in allowed_card.description_raw and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champs[0].name == "Jax" or rolled_runeterra_champs[1].name == "Jax":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "WEAPONMASTER" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champs[0].name == "Jhin" or rolled_runeterra_champs[1].name == "Jhin":
-            for index, allowed_card in enumerate(allowed_cards):
-                if allowed_card in jhin_followers and allowed_card not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champs[0].name == "Kayn" or rolled_runeterra_champs[1].name == "Kayn":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "CULTIST" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
     
-    # Roll runeterra champ, if runeterra was rolled as region 
-    elif "Runeterra" in rolled_regions:
-        for index, allowed_card in enumerate(allowed_cards):
-            if "Runeterra" in allowed_card.region_refs and allowed_card.is_champ and allowed_card not in runeterra_champs:
-                runeterra_champs.append(allowed_card)
-                runeterra_champ_weights.append(card_weights[index])
-        if len(runeterra_champs) == 0:
-            return "Error - no Runeterra Champ for rolling included"
-        rolled_runeterra_champ = random.choices(runeterra_champs, weights=runeterra_champ_weights)[0]
-        if remaining_champ_slots == 1:
-            rolled_deck[rolled_runeterra_champ.card_code] = 1
-            remaining_champ_slots -= 1
-            remaining_deck_slots -= 1
-        elif remaining_champ_slots == 2:
-            rolled_amount = random.choices(range(1, 3), weights=[one_of_chance, two_of_chance])[0]
-            rolled_deck[rolled_runeterra_champ.card_code] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
-        else:
-            rolled_amount = random.choices(range(1, 4), weights=[one_of_chance, two_of_chance, three_of_chance])[0]
-            rolled_deck[rolled_runeterra_champ.card_code] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
-        # Add rollable non_champs for rolled Runeterra-Champ
-        if rolled_runeterra_champ.name == "Bard":
-            for index, allowed_card in enumerate(allowed_cards):
-                # "06RU001T3" is the Chime Card
-                if "06RU001T3" in allowed_card.associated_card_refs and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champ.name == "Evelynn":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "Husk" in allowed_card.description_raw and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champ.name == "Jax":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "WEAPONMASTER" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champ.name == "Jhin":
-            for index, allowed_card in enumerate(allowed_cards):
-                if allowed_card in jhin_followers and allowed_card not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
-        if rolled_runeterra_champ.name == "Kayn":
-            for index, allowed_card in enumerate(allowed_cards):
-                if "CULTIST" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
+    # ROLL REGIONS
+    rolled_regions: List[str] = roll_regions(amount_champs=amount_champs, regions=regions, region_weights=region_weights, mono_region_chance=mono_region_chance, allow_two_runeterra_champs=allow_two_runeterra_champs)
     
-    # Search given allowed cards for champs and non_champs from the rolled regions
-    for rolled_region in rolled_regions:
-        if rolled_region != "Runeterra":
-            for index, allowed_card in enumerate(allowed_cards):
-                # check for card already in rollable cards is to prevent duplicate region cards to be twice as likely (and maybe lead to bugs)
-                if rolled_region in allowed_card.region_refs and allowed_card.is_champ and allowed_card.card_code not in rollable_champ_card_codes:
-                    rollable_champ_card_codes.append(allowed_card.card_code)
-                    rollable_champ_weights.append(card_weights[index])
-                elif rolled_region in allowed_card.region_refs and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
-                    rollable_non_champ_card_codes.append(allowed_card.card_code)
-                    rollable_non_champ_weights.append(card_weights[index])
+    # ROLL RUNETERRA CHAMPS
+    if "Runeterra" in rolled_regions:
+        # INIT AVAILABLE RUNETERRA-CHAMPS AND WEIGHTS
+        runeterra_champs: List[lor_card] = []
+        runeterra_champ_weights: List[int] = []
+        init_runeterra_champs(allowed_cards=allowed_cards, card_weights=card_weights, runeterra_champs=runeterra_champs, runeterra_champ_weights=runeterra_champ_weights)
+        if len(runeterra_champs) < rolled_regions.count("Runeterra"):
+            return f"Error - not enough Runeterra Champs for rolling included - {len(runeterra_champs)} for a {rolled_regions.count('Runeterra')} runeterra champ deck"
+        # ROLL RUNETERRA CHAMPS
+        rolled_runeterra_champs: List[lor_card] = roll_runeterra_champs(runeterra_champs=runeterra_champs, runeterra_champ_weights=runeterra_champ_weights)
+        # ROLL AMOUNT AND ADD ROLLED RUNETERRA CHAMPS TO THE DECK
+        cards_added_to_the_deck = add_runeterra_champs_to_deck(rolled_deck=rolled_deck, remaining_champs_slots=remaining_champ_slots, rolled_runeterra_champs=rolled_runeterra_champs, card_amount_chances=card_amount_chances)
+        remaining_deck_slots -= cards_added_to_the_deck
+        remaining_champ_slots -= cards_added_to_the_deck
+        # ADD ROLLABLE NON CHAMPS TO THE RESPECTIVE LIST
+        add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_cards=allowed_cards, card_weights=card_weights, rolled_runeterra_champs=rolled_runeterra_champs, rollable_non_champ_card_codes=rollable_non_champ_card_codes, rollable_non_champ_weights=rollable_non_champ_weights)
     
-    # Roll the deck
-    # Champs first (to the given amount)
-    while remaining_champ_slots > 0:
-        if sum(rollable_champ_weights) == 0:
-            break
-        rolled_champ = random.choices(rollable_champ_card_codes, weights=rollable_champ_weights)[0]
-        rollable_champ_weights[rollable_champ_card_codes.index(rolled_champ)] = 0
-        if remaining_champ_slots == 1:
-            rolled_deck[rolled_champ] = 1
-            remaining_champ_slots -= 1
-            remaining_deck_slots -= 1
-        elif remaining_champ_slots == 2:
-            rolled_amount = random.choices(range(1, 3), weights=[one_of_chance, two_of_chance])[0]
-            rolled_deck[rolled_champ] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
-        else:
-            rolled_amount = random.choices(range(1, 4), weights=[one_of_chance, two_of_chance, three_of_chance])[0]
-            rolled_deck[rolled_champ] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
+    # ADD ROLLABLE CARDS AND WEIGHTS FROM OTHER REGIONS THAN RUNETERRA TO THEIR RESPECTIVE LISTS
+    add_rollable_cards_and_weights_for_rolled_regions_other_than_runeterra(allowed_cards=allowed_cards, rolled_regions=rolled_regions, rollable_champ_card_codes=rollable_champ_card_codes, rollable_champ_weights=rollable_champ_weights, rollable_non_champ_card_codes=rollable_non_champ_card_codes, rollable_non_champ_weights=rollable_non_champ_weights)
+    
+    # ROLL THE DECK
+    # ROLL THE CHAMPS
+    amount_cards_added_to_the_deck = roll_non_runeterra_champs(rolled_deck=rolled_deck, remaining_champ_slots=remaining_champ_slots, card_amount_chances=card_amount_chances, rollable_champ_card_codes=rollable_champ_card_codes, rollable_champ_weights=rollable_champ_weights)
+    remaining_champ_slots -= amount_cards_added_to_the_deck
+    remaining_deck_slots -= amount_cards_added_to_the_deck
 
-    # Special Case not enough champs to fill the amount
+    # FILL UP CHAMP SLOTS, IF NOT ALL CHAMP SLOTS ARE USED AND THE OPTION IS ENABLED
     if remaining_champ_slots > 0:
         if fill_up_one_and_two_ofs_if_out_of_rollable_cards:
-            for key, value in rolled_deck.items():
-                if remaining_champ_slots == 0:
-                    break
-                if value == 1 and remaining_champ_slots == 1:
-                    rolled_deck[key] = 2
-                    remaining_champ_slots = 0
-                    remaining_deck_slots -= 1
-                elif value == 1 and remaining_champ_slots > 1:
-                    rolled_deck[key] = 3
-                    remaining_champ_slots -= 2
-                    remaining_deck_slots -= 2
-                elif value == 2 and remaining_champ_slots >= 1:
-                    rolled_deck[key] = 3
-                    remaining_champ_slots -= 1
-                    remaining_deck_slots -= 1
+            amount_cards_added_to_the_deck = fill_up_champ_one_and_two_ofs(rolled_deck=rolled_deck, remaining_champ_slots=remaining_champ_slots)
+            remaining_champ_slots -= amount_cards_added_to_the_deck
+            remaining_deck_slots -= amount_cards_added_to_the_deck
             if remaining_champ_slots > 0:
                 return f"Error - no champ for rolling included / left for the regions {rolled_regions} even after filling up one and two ofs"
         else:
             return f"Error - no champ for rolling included / left for the regions {rolled_regions}"
 
-    # Roll the non champs
-    while remaining_deck_slots > 0:
-        if sum(rollable_non_champ_weights) == 0:
-            break
-        rolled_non_champ = random.choices(rollable_non_champ_card_codes, weights=rollable_non_champ_weights)[0]
-        rollable_non_champ_weights[rollable_non_champ_card_codes.index(rolled_non_champ)] = 0
-        if remaining_deck_slots == 1:
-            rolled_deck[rolled_non_champ] = 1
-            remaining_champ_slots -= 1
-            remaining_deck_slots -= 1
-        elif remaining_deck_slots == 2:
-            rolled_amount = random.choices(range(1, 3), weights=[one_of_chance, two_of_chance])[0]
-            rolled_deck[rolled_non_champ] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
-        else:
-            rolled_amount = random.choices(range(1, 4), weights=[one_of_chance, two_of_chance, three_of_chance])[0]
-            rolled_deck[rolled_non_champ] = rolled_amount
-            remaining_champ_slots -= rolled_amount
-            remaining_deck_slots -= rolled_amount
+    # ROLL THE NON CHAMPS
+    amount_cards_added_to_the_deck = roll_non_champs(rolled_deck=rolled_deck, remaining_deck_slots=remaining_deck_slots, card_amount_chances=card_amount_chances, rollable_non_champ_card_codes=rollable_non_champ_card_codes, rollable_non_champ_weights=rollable_non_champ_weights)
+    remaining_deck_slots -= amount_cards_added_to_the_deck
 
-    # Special Case not enough cards to fill the deck
+    # FILL UP DECK SLOTS, IF NOT ALL DECK SLOTS ARE USED AND THE OPTION IS ENABLED
     if remaining_deck_slots > 0:
         if fill_up_one_and_two_ofs_if_out_of_rollable_cards:
-            for key, value in rolled_deck.items():
-                # To skip champs (otherwise this may lead to more champs in the deck than specified)
-                is_champ = False
-                for champ in all_champs:
-                    if champ.card_code == key:
-                        is_champ = True
-                        break
-                if is_champ:
-                    continue
-                if remaining_deck_slots == 0:
-                    break
-                if value == 1 and remaining_deck_slots == 1:
-                    rolled_deck[key] = 2
-                    remaining_champ_slots = 0
-                    remaining_deck_slots -= 1
-                elif value == 1 and remaining_deck_slots > 1:
-                    rolled_deck[key] = 3
-                    remaining_champ_slots -= 2
-                    remaining_deck_slots -= 2
-                elif value == 2 and remaining_deck_slots >= 1:
-                    rolled_deck[key] = 3
-                    remaining_champ_slots -= 1
-                    remaining_deck_slots -= 1
+            amount_cards_added_to_the_deck = fill_up_non_champ_one_and_two_ofs(rolled_deck=rolled_deck, remaining_deck_slots=remaining_deck_slots)
+            remaining_deck_slots -= amount_cards_added_to_the_deck
             if remaining_deck_slots > 0:
                 return f"Error - not enough cards for rolling included / left for the regions {rolled_regions} even after filling up one and two ofs"
         else:
             return f"Error - not enough cards for rolling included / left for the regions {rolled_regions}"
 
-    # Get the deckcode
-    rolled_deck_array = []
-    for key, value in rolled_deck.items():
-        rolled_deck_array.append(f"{value}:{key}")
-    lor_deck = lor_deckcodes.LoRDeck(rolled_deck_array)
-    deck_code = lor_deck.encode()
+    # GET AND RETURN THE DECKCODE
+    deck_code = get_deckcode_for_rolled_deck(rolled_deck=rolled_deck)
     return deck_code
 
 def multiple_deckrolls_and_removing_rolled_cards(amount_decks: int, allowed_cards: List[lor_card] = collectible_cards, weight_cards: bool = False, card_weights: List[int] = card_weights, total_amount_cards: int = 40, amount_champs: int = 6, regions: List[str] = all_regions, weight_regions: bool = False, region_weights: List[int] = region_weights, mono_region_chance: int = 0, allow_two_runeterra_champs: bool = True, one_of_chance: int = 20, two_of_chance: int = 30, three_of_chance: int = 50, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool = True) -> List[str]:
