@@ -340,7 +340,7 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
         # ROLL RUNETERRA CHAMPS
         rolled_runeterra_champs: List[lor_card] = roll_runeterra_champs(runeterra_champs=runeterra_champs, runeterra_champ_weights=runeterra_champ_weights)
         # ROLL AMOUNT AND ADD ROLLED RUNETERRA CHAMPS TO THE DECK
-        cards_added_to_the_deck = add_runeterra_champs_to_deck(rolled_deck=rolled_deck, remaining_champs_slots=remaining_champ_slots, rolled_runeterra_champs=rolled_runeterra_champs, card_amount_chances=card_amount_chances)
+        cards_added_to_the_deck = add_runeterra_champs_to_deck(rolled_deck=rolled_deck, remaining_champ_slots=remaining_champ_slots, rolled_runeterra_champs=rolled_runeterra_champs, card_amount_chances=card_amount_chances)
         remaining_deck_slots -= cards_added_to_the_deck
         remaining_champ_slots -= cards_added_to_the_deck
         # ADD ROLLABLE NON CHAMPS TO THE RESPECTIVE LIST
@@ -500,6 +500,6 @@ def create_txt_file_with_card_names(allowed_cards: List[lor_card] = collectible_
 #create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 
 #create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
-#create_mm_reroll_spreadsheat(amount_decks=30, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+create_mm_reroll_spreadsheat(amount_decks=10000, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 #print(multiple_deckrolls_and_removing_rolled_cards(50))
-create_txt_file_with_card_names()
+#create_txt_file_with_card_names()
