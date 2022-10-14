@@ -136,9 +136,9 @@ def init_runeterra_champs(allowed_cards: List[lor_card], card_weights: List[int]
             runeterra_champs.append(allowed_card)
             runeterra_champ_weights.append(card_weights[index])
 
-def roll_runeterra_champs(runeterra_champs: List[lor_card], runeterra_champ_weights: List[int]) -> List[lor_card]:
+def roll_runeterra_champs(runeterra_champs: List[lor_card], runeterra_champ_weights: List[int], runeterra_champ_amount: int) -> List[lor_card]:
     rolled_runeterra_champs: List[lor_card] = []
-    for i in range(2):
+    for i in range(runeterra_champ_amount):
         rolled_runeterra_champ = random.choices(runeterra_champs, weights=runeterra_champ_weights)[0]
         rolled_runeterra_champs.append(rolled_runeterra_champ)
         runeterra_champ_weights[runeterra_champs.index(rolled_runeterra_champ)] = 0
@@ -338,7 +338,7 @@ def deckroll(allowed_cards: List[lor_card] = collectible_cards, weight_cards: bo
         if len(runeterra_champs) < rolled_regions.count("Runeterra"):
             return f"Error - not enough Runeterra Champs for rolling included - {len(runeterra_champs)} for a {rolled_regions.count('Runeterra')} runeterra champ deck"
         # ROLL RUNETERRA CHAMPS
-        rolled_runeterra_champs: List[lor_card] = roll_runeterra_champs(runeterra_champs=runeterra_champs, runeterra_champ_weights=runeterra_champ_weights)
+        rolled_runeterra_champs: List[lor_card] = roll_runeterra_champs(runeterra_champs=runeterra_champs, runeterra_champ_weights=runeterra_champ_weights, runeterra_champ_amount=rolled_regions.count("Runeterra"))
         # ROLL AMOUNT AND ADD ROLLED RUNETERRA CHAMPS TO THE DECK
         cards_added_to_the_deck = add_runeterra_champs_to_deck(rolled_deck=rolled_deck, remaining_champ_slots=remaining_champ_slots, rolled_runeterra_champs=rolled_runeterra_champs, card_amount_chances=card_amount_chances)
         remaining_deck_slots -= cards_added_to_the_deck
@@ -496,7 +496,7 @@ def create_txt_file_with_card_names(allowed_cards: List[lor_card] = collectible_
 # Make newest cards more likely:
 for index, card in enumerate(collectible_cards):
     if card.card_set == "Set6cde":
-        card_weights[index] = 10
+        card_weights[index] = 20
 #create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 
 create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
