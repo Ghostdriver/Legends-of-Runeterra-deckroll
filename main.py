@@ -47,7 +47,6 @@ def get_all_cards_from_json_files(card_sets_folder: str) -> List[lor_card]:
         # Should only be one file
         card_set_file_name: str = os.listdir(card_set_file_json_folder_path)[0]
         card_set_file_json = os.path.join(card_set_file_json_folder_path, card_set_file_name)
-        print(card_set_file_json)
         with open(card_set_file_json, 'r', encoding='UTF-8') as file:
             set_cards = json.load(file)
         for set_card in set_cards:
