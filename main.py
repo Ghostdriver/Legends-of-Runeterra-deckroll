@@ -47,6 +47,7 @@ def get_all_cards_from_json_files(card_sets_folder: str) -> List[lor_card]:
         # Should only be one file
         card_set_file_name: str = os.listdir(card_set_file_json_folder_path)[0]
         card_set_file_json = os.path.join(card_set_file_json_folder_path, card_set_file_name)
+        print(card_set_file_json)
         with open(card_set_file_json, 'r', encoding='UTF-8') as file:
             set_cards = json.load(file)
         for set_card in set_cards:
@@ -74,14 +75,18 @@ card_weights: List[int] = [1] * len(collectible_cards)
 jhin_followers: List[lor_card] = []
 for collectible_card in collectible_cards:
     if not collectible_card.is_champ:
-        if collectible_card.name == "Lord Broadmane" and collectible_card not in jhin_followers:
-            jhin_followers.append(collectible_card)
         for associated_card in collectible_card.associated_card_refs:
             for uncollectible_card in uncollectible_cards:
                 if uncollectible_card.card_code == associated_card:
                     if "Skill" in uncollectible_card.keyword_refs and collectible_card not in jhin_followers:
                         jhin_followers.append(collectible_card)
                     break
+
+ryze_follower_names: List[str] = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
+ryze_followers: List[lor_card] = []
+for collectible_card in collectible_cards:
+    if collectible_card.name in ryze_follower_names:
+        ryze_followers.append(collectible_card)
 
 def check_input_parameters(allowed_cards: List[lor_card], weight_cards: bool, card_weights: List[int], total_amount_cards: int, amount_champs: int, regions: List[str], weight_regions: bool, region_weights: List[int], mono_region_chance: int, allow_two_runeterra_champs: bool, one_of_chance: int, two_of_chance: int, three_of_chance: int, fill_up_one_and_two_ofs_if_out_of_rollable_cards: bool) -> None | str:
     # A few exceptions -- not all problematic cases are solved/detected
@@ -171,10 +176,15 @@ def add_runeterra_champs_to_deck(rolled_deck: dict[str, int], remaining_champ_sl
         else:
             return remaining_champ_slots
 
-def add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_cards: List[lor_card], card_weights:List[int], rolled_runeterra_champs: List[lor_card], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights=List[int]) -> None:
+def add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_cards: List[lor_card], card_weights: List[int], rolled_runeterra_champs: List[lor_card], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights=List[int]) -> None:
     rolled_runeterra_champ_names = []
     for rolled_runeterra_champ in rolled_runeterra_champs:
         rolled_runeterra_champ_names.append(rolled_runeterra_champ.name)
+    if "Aatrox" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if "DARKIN" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
     if "Bard" in rolled_runeterra_champ_names:
         for index, allowed_card in enumerate(allowed_cards):
             # "06RU001T3" is the Chime Card
@@ -193,7 +203,7 @@ def add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_card
                 rollable_non_champ_weights.append(card_weights[index])
     if "Jhin" in rolled_runeterra_champ_names:
         for index, allowed_card in enumerate(allowed_cards):
-            if allowed_card in jhin_followers and allowed_card not in rollable_non_champ_card_codes:
+            if allowed_card in jhin_followers and allowed_card.card_code not in rollable_non_champ_card_codes:
                 rollable_non_champ_card_codes.append(allowed_card.card_code)
                 rollable_non_champ_weights.append(card_weights[index])
     if "Kayn" in rolled_runeterra_champ_names or "Varus" in rolled_runeterra_champ_names:
@@ -201,6 +211,12 @@ def add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_card
             if "CULTIST" in allowed_card.subtypes and not allowed_card.is_champ and allowed_card.card_code not in rollable_non_champ_card_codes:
                 rollable_non_champ_card_codes.append(allowed_card.card_code)
                 rollable_non_champ_weights.append(card_weights[index])
+    if "Ryze" in rolled_runeterra_champ_names:
+        for index, allowed_card in enumerate(allowed_cards):
+            if allowed_card in ryze_followers and allowed_card.card_code not in rollable_non_champ_card_codes:
+                rollable_non_champ_card_codes.append(allowed_card.card_code)
+                rollable_non_champ_weights.append(card_weights[index])
+    
 
 def add_rollable_cards_and_weights_for_rolled_regions_other_than_runeterra(allowed_cards: List[lor_card], rolled_regions: List[str], rollable_champ_card_codes: List[str], rollable_champ_weights: List[int], rollable_non_champ_card_codes: List[str], rollable_non_champ_weights: List[int]) -> None:
     for rolled_region in rolled_regions:
@@ -488,18 +504,32 @@ def create_txt_file_with_card_names(allowed_cards: List[lor_card] = collectible_
         file.write(str(card_names_formatted))
     print(f"{filename} was created in the current folder")
 
+# Check if runeterra champ followers are correct (biggest part manually) -- prints amount of associated cards
+#runeterra_champ_names = ["Jax", "Bard", "Evelynn", "Jhin", "Ryze", "Kayn", "Varus", "Kayn", "Aatrox"]
+#runeterra_champs: List[lor_card] = []
+#for collectible_card in collectible_cards:
+#    if collectible_card.name in runeterra_champ_names:
+#        runeterra_champs.append(collectible_card)
+#for runeterra_champ in runeterra_champs:
+#    associated_follower_card_codes: List[str] = []
+#    add_rollable_non_champs_and_weights_for_rolled_runeterra_champs(allowed_cards=collectible_cards, card_weights=card_weights, rolled_runeterra_champs=[runeterra_champ], rollable_non_champ_card_codes=associated_follower_card_codes, rollable_non_champ_weights=card_weights)
+#    print(f"{runeterra_champ.name} has {len(associated_follower_card_codes)} associated cards!")
 
 # Make Region Runeterra very likely:
 # region_weights[all_regions.index("Runeterra")] = 20
+
 # Exclude a region:
 # region_weights[all_regions.index("Demacia")] = 0
-# Make newest cards more likely:
-for index, card in enumerate(collectible_cards):
-    if card.card_set == "Set6cde":
-        card_weights[index] = 20
-#create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 
-create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+# Make newest cards more likely:
+# (Card Codes from Aatrox Expansion)
+new_card_codes = ['06NX041', '06NX039', '06RU006', '06RU006T2', '06RU006T12', '06RU006T3', '06RU006T7', '06RU006T6', '06RU006T9', '06RU006T5', '06RU006T1', '06RU006T11', '06RU006T4', '06RU006T8', '06RU026', '06RU026T2', '06RU026T1', '06RU026T7', '06RU026T3', '06RU026T6', '06RU026T4', '06RU026T5', '06RU043', '06RU039', '06FR018', '06FR027', '06FR036', '06FR021', '06FR035', '06FR018T1', '06FR018T3', '06BC023', '06BC043', '06BC029', '06BC029T3', '06BC029T1', '06BC042', '06IO023', '06IO039', '06IO023T3', '06IO023T1', '06IO040', '06IO039T2', '06IO039T1', '06IO037', '06PZ006', '06PZ010', '06PZ041', '06PZ009', '06BW040', '06BW044', '06MT007', '06MT018', '06MT018T1', '06MT031', '06MT010', '06MT016', '06MT015', '06MT008', '06MT008T2', '06MT008T1', '06MT035', '06MT017', '06MT035T1', '06MT052', '06SH051', '06SH046', '06SH028', '06DE041', '06DE044', '06DE043', '06DE039', '06SI042', '06SI039', '06SI038'] 
+for index, card in enumerate(collectible_cards):
+    if card.card_code in new_card_codes:
+        card_weights[index] = 20
+
+#create_tournament_spreadsheat(amount_players=100, amount_decks_per_player=1, link_to_website_for_showing_the_deck=True, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
+#create_mm_tournament_spreadsheat(amount_players=100, link_prefix_before_deck_code="https://masteringruneterra.com/deck/", allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 #create_mm_reroll_spreadsheat(amount_decks=10000, allowed_cards=collectible_cards, weight_cards=True, card_weights=card_weights, total_amount_cards=40, amount_champs=6, regions=all_regions, weight_regions=True, region_weights=region_weights, mono_region_chance=0, allow_two_runeterra_champs=True, one_of_chance=20, two_of_chance=30, three_of_chance=50, fill_up_one_and_two_ofs_if_out_of_rollable_cards=True)
 #print(multiple_deckrolls_and_removing_rolled_cards(50))
 #create_txt_file_with_card_names()
