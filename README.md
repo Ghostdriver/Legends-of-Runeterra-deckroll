@@ -1,3 +1,6 @@
+# Discord Bot Invite Link
+https://discord.com/api/oauth2/authorize?client_id=1074070984124014632&permissions=3072&scope=bot
+
 # Legends-of-Runeterra-deckroll was created to create random decks with a lot of configuration options and the ability to create decks for a whole tournament.
 If you have questions or ideas on how to improve this tool feel free to ask/suggest them.
 I hope the main.py is self-explanatory, otherwise ask questions and I will comment it for better understanding (and yes without programming background it can be quite hard to understand any code).

@@ -1,1 +1,4 @@
 *.png
+.venv
+__pycache__
+*.key
