@@ -1,11 +1,12 @@
 from typing import  Dict, Literal
-from CardData import ALL_REGIONS, CARD_SETS
+from CardData import ALL_REGIONS, CARD_SETS, RARITIES
 from CardPool import CardPool
 from Deckroll import Deckroll
 import discord
 from discord.ext import commands
 from copy import deepcopy
 import re
+from tenacity import RetryError
 
 # CARD POOL OPTIONS
 # IF cards should get fetched from API (needs some time for the first run - up to a few minutes)
@@ -19,7 +20,7 @@ RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Ba
 DECKLINK_PREFIX: str = "https://app.mobalytics.gg/lor/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
-START_DISCORD_BOT: bool = False
+START_DISCORD_BOT: bool = True
 SEND_DECKCODE: bool = False
 SEND_DECKLINK: bool = True
 
@@ -122,6 +123,8 @@ def run_discord_bot() -> None:
                 - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
                 Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde
+                - change card weights based on their rarity: <rarity>=<number> --> epic=10
+                Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
                 """
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
@@ -214,39 +217,59 @@ def run_discord_bot() -> None:
                         raise ValueError(error)
 
                 # change region weights
+                MAX_REGION_WEIGHT = 100000
                 for region_name in ALL_REGIONS:   
                     region_weight_change_regex = rf".*{region_name.lower()}=(\d+).*"
                     region_weight_change_regex_match = re.match(region_weight_change_regex, message_content)
                     if bool(region_weight_change_regex_match):
                         region_weight_change = int(region_weight_change_regex_match.group(1))
                         regions_and_weights[region_name] = region_weight_change
-                        if region_weight_change > 1000:
-                            error = f"detected region weight change for region {region_name} with the value {region_weight_change} - only values between 0 and 1000 are allowed."
+                        if region_weight_change > MAX_REGION_WEIGHT:
+                            error = f"detected region weight change for region {region_name} with the value {region_weight_change} - only values between 0 and {MAX_REGION_WEIGHT} are allowed."
                             await channel.send(error)
                             raise ValueError(error)
                         
                 # change card weights based on their set
+                MAX_CARD_WEIGHT_CHANGE_FACTOR = 10000
                 for card_set in CARD_SETS:
                     card_weight_change_regex = rf".*{card_set.lower()}=(\d+).*"
                     card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
                     if bool(card_weight_change_regex_match):
-                        card_weight_change = int(card_weight_change_regex_match.group(1))
-                        if card_weight_change > 1000:
-                            error = f"detected card weight change for card set {card_set} with the value {card_weight_change} - only values between 0 and 1000 are allowed."
+                        card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                        if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                            error = f"detected card weight change for card set {card_set} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
                             await channel.send(error)
                             raise ValueError(error)
                         for collectible_card in card_pool.collectible_cards:
                             if collectible_card.card_set.lower() == card_set.lower():
-                                cards_and_weights[collectible_card.card_code] = card_weight_change
+                                cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+
+                # change card weights based on their rarity
+                for rarity in RARITIES:
+                    card_weight_change_regex = rf".*{rarity.lower()}=(\d+).*"
+                    card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
+                    if bool(card_weight_change_regex_match):
+                        card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                        if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                            error = f"detected card weight change for rarity {rarity} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
+                            await channel.send(error)
+                            raise ValueError(error)
+                        for collectible_card in card_pool.collectible_cards:
+                            if collectible_card.rarity_ref.lower() == rarity.lower():
+                                cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
 
                 deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
-                deckcode = deck_roll.roll_deck()
+                try:
+                    deckcode = deck_roll.roll_deck()
+                except RetryError as e:
+                    await channel.send("Even after 10 rolls no valid deck could be rolled for the given settings")
+                    raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
                     await channel.send(DECKLINK_PREFIX + deckcode)
-    client.run(token=TOKEN)
 
+    client.run(token=TOKEN)
 
 if __name__ == "__main__":
     if CREATE_EXCEL_SPREADSHEAT:

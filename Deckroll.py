@@ -6,6 +6,7 @@ from Deck import Deck
 import datetime
 import xlsxwriter
 import os
+from tenacity import retry, stop_after_attempt
 
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[str, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
@@ -13,6 +14,8 @@ class Deckroll:
         self.amount_regions: int = amount_regions
         self.amount_cards: int = amount_cards
         self.amount_champions: int = amount_champions
+        if self.amount_champions > self.amount_cards:
+            self.amount_champions = self.amount_cards
         self.regions_and_weights: Dict[str, int] = regions_and_weights
         self.cards_and_weights: Dict[str, int] = cards_and_weights
         self.cards_and_weights_runeterra_champions: Dict[str, int] = {}
@@ -21,6 +24,7 @@ class Deckroll:
         self.count_chances: Dict[int, int] = count_chances
         self.count_chances_two_remaining_deck_slots: Dict[int, int] = count_chances_two_remaining_deck_slots
 
+    @retry(stop=stop_after_attempt(10))
     def roll_deck(self) -> str:
         # init Deck
         self.deck = Deck(card_pool=self.card_pool)

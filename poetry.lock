@@ -202,6 +202,17 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "tenacity"
+version = "8.2.1"
+description = "Retry code until it succeeds"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -253,7 +264,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "9381d79ba7ae3693f451cbefa0da3fc6990eecd404c58331d1893a4a4e9b1db2"
+content-hash = "98af25bb9a3056d3ca5b7d1498a5e384341bea60c1d0c4d80aac576dc7db722d"
 
 [metadata.files]
 aiohttp = []
@@ -280,6 +291,7 @@ packaging = []
 pathspec = []
 platformdirs = []
 requests = []
+tenacity = []
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},

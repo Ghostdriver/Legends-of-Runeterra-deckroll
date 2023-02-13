@@ -1,6 +1,7 @@
 from typing import List, Dict
 
 CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde"]
+RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 
 class CardData:
