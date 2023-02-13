@@ -27,6 +27,6 @@ class CardData:
         self.is_collectible: bool = card["collectible"]
         self.card_set: str = card["set"]
         if card["rarityRef"] == "Champion":
-            self.is_champ: bool = True
+            self.is_champion: bool = True
         else:
-            self.is_champ: bool = False
+            self.is_champion: bool = False

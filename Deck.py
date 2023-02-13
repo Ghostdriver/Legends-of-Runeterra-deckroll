@@ -7,7 +7,7 @@ class Deck:
     def __init__(self, card_pool: CardPool) -> None:
         self.card_pool = card_pool
         self.max_cards = 40
-        self.max_champs = 6
+        self.max_champions = 6
         self.cards_and_counts: DefaultDict[str, int] = defaultdict(lambda: 0)
 
     @property
@@ -19,15 +19,15 @@ class Deck:
         return self.max_cards - self.amount_cards
     
     @property
-    def amount_champs(self) -> int:
+    def amount_champions(self) -> int:
         amount = 0
-        for card in self.card_pool.all_champs:
+        for card in self.card_pool.all_champions:
             amount += self.cards_and_counts[card.card_code]
         return amount
     
     @property 
-    def remaining_champs(self) -> int:
-        return self.max_champs - self.amount_champs
+    def remaining_champions(self) -> int:
+        return self.max_champions - self.amount_champions
     
     def add_card_and_count(self, card_code: str, count: int) -> None:
         card = self.card_pool.get_card_by_card_code(card_code=card_code)
@@ -35,7 +35,7 @@ class Deck:
             raise ValueError("With the addition of the specified count to the card the count for this card would be out of the range 0-3")
         if self.amount_cards + count > self.max_cards:
             raise ValueError("With the addition of the card the maximum amount of cards would be exceeded")
-        if card.is_champ and self.amount_champs + count > self.max_champs:
+        if card.is_champion and self.amount_champions + count > self.max_champions:
             raise ValueError("With the addition of the card the maximum amount of champions would be exceeded")
         self.cards_and_counts[card_code] += count
 
