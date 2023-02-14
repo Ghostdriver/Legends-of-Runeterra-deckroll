@@ -10,6 +10,7 @@ class CardPool:
         '''All parameters get passed to get_all_cards, which is not a class function to make it cacheable'''
         self.api_or_local = api_or_local
         self.all_cards: List[CardData] = self.get_all_cards()
+        print(f"CardPool initialized with {len(self.all_cards)} total cards")
         self.collectible_cards: List[CardData] = []
         self.uncollectible_cards: List[CardData] = []
         self.all_champions: List[CardData] = []
@@ -116,7 +117,6 @@ class CardPool:
                     card_set_json = json.loads(f.read())
                     for card in card_set_json:
                         all_cards.append(CardData(card))
-        print(f"CardPool initialized with {len(all_cards)} cards in total")
         return all_cards
 
     def get_card_by_card_code(self, card_code: str) -> CardData:

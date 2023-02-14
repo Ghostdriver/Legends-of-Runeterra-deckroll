@@ -82,6 +82,7 @@ def run_discord_bot() -> None:
             # default deckroll
             if message_content == "!deckroll":
                 deckcode = default_deck_roll.roll_deck()
+                print(f"{message.author.name} {message_content} --> {deckcode}")
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
@@ -264,6 +265,7 @@ def run_discord_bot() -> None:
                 except RetryError as e:
                     await channel.send("Even after 10 rolls no valid deck could be rolled for the given settings")
                     raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
+                print(f"{message.author.name}: {message_content} --> {deckcode}")
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
