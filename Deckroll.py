@@ -10,19 +10,39 @@ from tenacity import retry, stop_after_attempt
 
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[str, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
-        self.card_pool: CardPool = card_pool
-        self.amount_regions: int = amount_regions
-        self.amount_cards: int = amount_cards
-        self.amount_champions: int = amount_champions
+        self.card_pool = card_pool
+        self.amount_regions = amount_regions
+        self.amount_cards = amount_cards
+        self.amount_champions = amount_champions
         if self.amount_champions > self.amount_cards:
             self.amount_champions = self.amount_cards
-        self.regions_and_weights: Dict[str, int] = regions_and_weights
-        self.cards_and_weights: Dict[str, int] = cards_and_weights
+        self.regions_and_weights = regions_and_weights
+        self.cards_and_weights = cards_and_weights
         self.cards_and_weights_runeterra_champions: Dict[str, int] = {}
         for card in self.card_pool.runeterra_champions:
             self.cards_and_weights_runeterra_champions[card.card_code] = self.cards_and_weights[card.card_code]
-        self.count_chances: Dict[int, int] = count_chances
-        self.count_chances_two_remaining_deck_slots: Dict[int, int] = count_chances_two_remaining_deck_slots
+        self.count_chances = count_chances
+        self.count_chances_two_remaining_deck_slots = count_chances_two_remaining_deck_slots
+
+    def roll_deck_spreadsheat(self, amount_decks: int, decklink_prefix: str) -> None:
+        PATH: str = "created_deckroll_excel_spreadsheats/"
+        start_time = datetime.datetime.now()
+        workbook_name: str = f"Deckroll-{datetime.date.today().isoformat()}.xlsx"
+        with xlsxwriter.Workbook(os.path.join(PATH, workbook_name)) as workbook:
+            worksheet = workbook.add_worksheet("rolled decks")
+            first_line = ["Player", "Deck Link", "Deck Code"]
+            for column, element in enumerate(first_line):
+                worksheet.write(0, column, element)
+            for row in range(1, amount_decks + 1):
+                deckcode = self.roll_deck()
+                worksheet.write(row, 0, row)
+                worksheet.write(row, 1, deckcode)
+                worksheet.write(row, 2, decklink_prefix + deckcode)
+        end_time = datetime.datetime.now()
+        needed_time = end_time - start_time
+        print(
+            f"Created Excel {workbook_name} with {amount_decks} rolled decks in {needed_time}"
+        )
 
     @retry(stop=stop_after_attempt(10))
     def roll_deck(self) -> str:
@@ -31,13 +51,13 @@ class Deckroll:
         self.deck.max_cards = self.amount_cards
         self.deck.max_champions = self.amount_champions
         # init new values, that only apply to this roll
-        self.roll_regions()
-        self.roll_runeterra_champions()
-        self.roll_non_runeterra_champions()
-        self.roll_non_champions()
-        return self.deck.get_deckcode()
+        self._roll_regions()
+        self._roll_runeterra_champions()
+        self._roll_non_runeterra_champions()
+        self._roll_non_champions()
+        return self.deck.deckcode
 
-    def roll_regions(self) -> List[str]:
+    def _roll_regions(self) -> None:
         '''return the regionRefs of the rolled regions'''
         # deepcopy to not screw up subsequent rolls
         regions_and_weights_roll = deepcopy(self.regions_and_weights)
@@ -52,7 +72,7 @@ class Deckroll:
             if rolled_region != "Runeterra":
                 regions_and_weights_roll[rolled_region] = 0
     
-    def roll_runeterra_champions(self) -> List[str]:
+    def _roll_runeterra_champions(self) -> None:
         '''rolls the runeterra champions and count and adds them to the deck'''
         # deepcopy to not screw up subsequent rolls
         cards_and_weights_runeterra_champions_roll = deepcopy(self.cards_and_weights_runeterra_champions)
@@ -65,9 +85,9 @@ class Deckroll:
             cards_and_weights_runeterra_champions_roll[rolled_runeterra_champion] = 0
         # roll the amount of runeterra champions
         for rolled_runeterra_champion in self.rolled_runeterra_champions:
-            self.roll_count(rolled_runeterra_champion)
+            self._roll_card_count(rolled_runeterra_champion)
     
-    def roll_non_runeterra_champions(self) -> None:
+    def _roll_non_runeterra_champions(self) -> None:
         '''rolls the non runeterra champions'''
         # init cards and weights rollable champs for this roll (depends on the rolled regions)
         cards_and_weights_rollable_champions_roll: Dict[str, int] = {}
@@ -79,10 +99,10 @@ class Deckroll:
         # roll champions
         while self.deck.remaining_champions > 0:
             rolled_champion = random.choices(list(cards_and_weights_rollable_champions_roll.keys()), weights=list(cards_and_weights_rollable_champions_roll.values()))[0]
-            self.roll_count(rolled_champion)
+            self._roll_card_count(rolled_champion)
             cards_and_weights_rollable_champions_roll[rolled_champion] = 0
         
-    def roll_non_champions(self) -> None:
+    def _roll_non_champions(self) -> None:
         '''rolls all non champions'''
         # init cards and weights rollable non champions for this roll (depends on the rolled regions)
         cards_and_weights_rollable_non_champions_roll: Dict[str, int] = {}
@@ -100,10 +120,10 @@ class Deckroll:
         # roll non champions
         while self.deck.remaining_cards > 0:
             rolled_non_champion = random.choices(list(cards_and_weights_rollable_non_champions_roll.keys()), weights=list(cards_and_weights_rollable_non_champions_roll.values()))[0]
-            self.roll_count(rolled_non_champion)
+            self._roll_card_count(rolled_non_champion)
             cards_and_weights_rollable_non_champions_roll[rolled_non_champion] = 0
 
-    def roll_count(self, card_code: str):
+    def _roll_card_count(self, card_code: str) -> None:
         '''rolls the amount, how often a card is present in the deck'''
         card = self.card_pool.get_card_by_card_code(card_code=card_code)
         # Calculate max rollable count
@@ -130,27 +150,3 @@ class Deckroll:
                 list(self.count_chances.keys()), list(self.count_chances.values())
             )[0]
         self.deck.add_card_and_count(card.card_code, count)
-
-    def roll_deck_spreadsheat(self, amount_decks: int, decklink_prefix: str) -> None:
-        PATH: str = "created_deckroll_excel_spreadsheats/"
-        start_time = datetime.datetime.now()
-        workbook_name: str = f"Deckroll-{datetime.date.today().isoformat()}.xlsx"
-        with xlsxwriter.Workbook(os.path.join(PATH, workbook_name)) as workbook:
-            worksheet = workbook.add_worksheet("rolled decks")
-            first_line = ["Player", "Deck Link", "Deck Code"]
-            for column, element in enumerate(first_line):
-                worksheet.write(0, column, element)
-            for row in range(1, amount_decks + 1):
-                deckcode = self.roll_deck()
-                worksheet.write(row, 0, row)
-                worksheet.write(row, 1, deckcode)
-                worksheet.write(row, 2, decklink_prefix + deckcode)
-        end_time = datetime.datetime.now()
-        needed_time = end_time - start_time
-        print(
-            f"Created Excel {workbook_name} with {amount_decks} rolled decks in {needed_time}"
-        )
-        
-
-
-            

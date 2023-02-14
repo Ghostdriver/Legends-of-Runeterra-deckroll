@@ -29,6 +29,15 @@ class Deck:
     def remaining_champions(self) -> int:
         return self.max_champions - self.amount_champions
     
+    @property
+    def deckcode(self) -> str:
+        deck_formatted = []
+        for card_code, count in self.cards_and_counts.items():
+            deck_formatted.append(f"{count}:{card_code}")
+        lor_deck = lor_deckcodes.LoRDeck(deck_formatted)
+        deck_code = lor_deck.encode()
+        return deck_code
+    
     def add_card_and_count(self, card_code: str, count: int) -> None:
         card = self.card_pool.get_card_by_card_code(card_code=card_code)
         if not (0 <= self.cards_and_counts[card_code] + count <= 3):
@@ -38,11 +47,3 @@ class Deck:
         if card.is_champion and self.amount_champions + count > self.max_champions:
             raise ValueError("With the addition of the card the maximum amount of champions would be exceeded")
         self.cards_and_counts[card_code] += count
-
-    def get_deckcode(self) -> str:
-        deck_formatted = []
-        for card_code, count in self.cards_and_counts.items():
-            deck_formatted.append(f"{count}:{card_code}")
-        lor_deck = lor_deckcodes.LoRDeck(deck_formatted)
-        deck_code = lor_deck.encode()
-        return deck_code

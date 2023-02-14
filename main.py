@@ -49,7 +49,7 @@ count_chances_two_remaining_deck_slots_default: Dict[int, int] = {
 }
 default_deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions_default, amount_cards=amount_cards_default, amount_champions=amount_champions_default, regions_and_weights=regions_and_weights_default, cards_and_weights=cards_and_weights_default, count_chances=count_chances_default, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots_default)
 
-# INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT
+# INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
 amount_regions = deepcopy(amount_regions_default)
 amount_cards = deepcopy(amount_cards_default)
 amount_champions = deepcopy(amount_champions_default)
@@ -62,10 +62,8 @@ count_chances_two_remaining_deck_slots = deepcopy(count_chances_two_remaining_de
 
 def run_discord_bot() -> None:
     # the following line will fail, because on git is not the discord bot token and I won't share it (security)
-    # in general I should be the only one starting this bot
-    # but if you want to try some things yourself feel free to test it, create your own application on discord developers
-    # please respect my authorship
-    # for personal use I think having the create excel spreadsheat command instead, should be sufficient for most use cases
+    # for personal use I think having the create excel spreadsheat command should be sufficient for most use cases
+    # so if the script fails here please set START_DISCORD_BOT = False
     with open("discord_bot_token.key") as file:
         TOKEN = file.read()
     intents = discord.Intents.default()
