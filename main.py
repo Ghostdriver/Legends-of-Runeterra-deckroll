@@ -50,9 +50,9 @@ count_chances_two_remaining_deck_slots_default: Dict[int, int] = {
 default_deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions_default, amount_cards=amount_cards_default, amount_champions=amount_champions_default, regions_and_weights=regions_and_weights_default, cards_and_weights=cards_and_weights_default, count_chances=count_chances_default, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots_default)
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
-amount_regions = deepcopy(amount_regions_default)
-amount_cards = deepcopy(amount_cards_default)
-amount_champions = deepcopy(amount_champions_default)
+amount_regions = amount_regions_default
+amount_cards = amount_cards_default
+amount_champions = amount_champions_default
 regions_and_weights = deepcopy(regions_and_weights_default)
 cards_and_weights = deepcopy(cards_and_weights_default)
 count_chances = deepcopy(count_chances_default)
@@ -135,9 +135,9 @@ def run_discord_bot() -> None:
                 "!deckroll"
             ):
                 # init values with default values
-                amount_regions = deepcopy(amount_regions_default)
-                amount_cards = deepcopy(amount_cards_default)
-                amount_champions = deepcopy(amount_champions_default)
+                amount_regions = amount_regions_default
+                amount_cards = amount_cards_default
+                amount_champions = amount_champions_default
                 regions_and_weights = deepcopy(regions_and_weights_default)
                 cards_and_weights = deepcopy(cards_and_weights_default)
                 count_chances = deepcopy(count_chances_default)
