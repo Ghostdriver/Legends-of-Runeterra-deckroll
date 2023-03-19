@@ -19,7 +19,8 @@ from assemble_card_image import assemble_card_image
 # because I haven't found a good way to get ryze associated cards, a list with all card names belonging to him has to be given (a better solution would be appreciated)
 API_OR_LOCAL: Literal["API", "LOCAL"] = "API"
 RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
-DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
+DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/" # "https://masteringruneterra.com/deck/" # "https://app.mobalytics.gg/lor/decks/code/"
+DECKROLL_DECK_PREFIX: str = "https://app.mobalytics.gg/lor/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
 START_DISCORD_BOT: bool = True
@@ -117,7 +118,7 @@ def run_discord_bot() -> None:
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
-                    await channel.send(DECKLINK_PREFIX + deckcode)
+                    await channel.send(DECKROLL_DECK_PREFIX + deckcode)
             
             elif message_content.startswith(
                 "!deckroll"
@@ -300,13 +301,13 @@ def run_discord_bot() -> None:
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
-                    await channel.send(DECKLINK_PREFIX + deckcode)
+                    await channel.send(DECKROLL_DECK_PREFIX + deckcode)
 
     client.run(token=TOKEN)
 
 if __name__ == "__main__":
     if CREATE_EXCEL_SPREADSHEAT:
         deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
-        deck_roll.roll_deck_spreadsheat(amount_decks=AMOUNT_DECKS, decklink_prefix=DECKLINK_PREFIX)
+        deck_roll.roll_deck_spreadsheat(amount_decks=AMOUNT_DECKS, decklink_prefix=DECKROLL_DECK_PREFIX)
     if START_DISCORD_BOT:
         run_discord_bot()
