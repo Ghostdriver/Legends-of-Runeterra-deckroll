@@ -172,6 +172,18 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "pillow"
+version = "9.4.0"
+description = "Python Imaging Library (Fork)"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline-tabs", "sphinx-issues (>=3.0.1)", "sphinx-removed-in", "sphinxext-opengraph"]
+tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
+
+[[package]]
 name = "platformdirs"
 version = "3.0.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -264,7 +276,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "98af25bb9a3056d3ca5b7d1498a5e384341bea60c1d0c4d80aac576dc7db722d"
+content-hash = "1d8d51e569ee49effa9c6f19e6424ffdbb0a4dc53cefbd4e61dd45f887ff588a"
 
 [metadata.files]
 aiohttp = []
@@ -289,6 +301,7 @@ multidict = []
 mypy-extensions = []
 packaging = []
 pathspec = []
+pillow = []
 platformdirs = []
 requests = []
 tenacity = []

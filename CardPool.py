@@ -123,6 +123,15 @@ class CardPool:
             if card.card_code == card_code:
                 return card
         raise ValueError(f"No Card with card code {card_code} found")
+    
+    def get_card_by_card_name(self, card_name: str) -> CardData:
+        for card in self.all_cards:
+            if card_name.lower() == card.name.lower():
+                return card
+        for card in self.all_cards:
+            if card_name.lower() in card.name.lower():
+                return card
+        raise ValueError(f"No Card with card name {card_name} found")
 
     def create_txt_file_with_card_names(self) -> None:
         '''Creates a text file with all card names from collectible cards, which can be used for scribbl for example'''

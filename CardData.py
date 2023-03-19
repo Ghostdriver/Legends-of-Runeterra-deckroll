@@ -7,6 +7,7 @@ ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxu
 class CardData:
     def __init__(self, card: Dict) -> None:
         self.associated_card_refs: List[str] = card["associatedCardRefs"]
+        self.game_absolute_path = card["assets"][0]["gameAbsolutePath"]
         self.region_refs: List[str] = card["regionRefs"]
         self.attack: int = card["attack"]
         self.cost: int = card["cost"]
@@ -27,6 +28,7 @@ class CardData:
         self.card_type: str = card["type"]
         self.is_collectible: bool = card["collectible"]
         self.card_set: str = card["set"]
+        
         if card["rarityRef"] == "Champion":
             self.is_champion: bool = True
         else:

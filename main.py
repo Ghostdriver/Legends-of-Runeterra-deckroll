@@ -2,11 +2,13 @@ from typing import  Dict, Literal
 from CardData import ALL_REGIONS, CARD_SETS, RARITIES
 from CardPool import CardPool
 from Deckroll import Deckroll
+from Deck import Deck
 import discord
 from discord.ext import commands
 from copy import deepcopy
 import re
 from tenacity import RetryError
+from assemble_card_image import assemble_card_image
 
 # CARD POOL OPTIONS
 # IF cards should get fetched from API (needs some time for the first run - up to a few minutes)
@@ -17,7 +19,7 @@ from tenacity import RetryError
 # because I haven't found a good way to get ryze associated cards, a list with all card names belonging to him has to be given (a better solution would be appreciated)
 API_OR_LOCAL: Literal["API", "LOCAL"] = "API"
 RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
-DECKLINK_PREFIX: str = "https://app.mobalytics.gg/lor/decks/code/"
+DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
 START_DISCORD_BOT: bool = True
@@ -77,15 +79,46 @@ def run_discord_bot() -> None:
         if isinstance(message.content, str):
             message_content: str = message.content.lower()
 
+            # DISPLAY DECK
+            if message_content.startswith("!deck "):               
+                split_message = message_content.split(" ", 1)
+                deckcode = split_message[1]
+                deck = Deck(card_pool=card_pool)
+                deck.load_deck_from_deckcode(deckcode=deckcode)
+                url = f"{DECKLINK_PREFIX}{deckcode}"
+                deck_sorted_by_card_type = deck.sort_deck_by_card_type()
+
+                embed=discord.Embed(title="Decklink runeterra.ar", url=url)
+                embed.set_thumbnail(url="https://static.wikia.nocookie.net/leagueoflegends/images/2/2c/Legends_of_Runeterra_icon.png/revision/latest?cb=20191020214918")
+                embed.add_field(name="Champions", value=deck_sorted_by_card_type["champions"], inline=True)
+                embed.add_field(name="Follower", value=deck_sorted_by_card_type["non_champions"], inline=True)
+                embed.add_field(name="Spells", value=deck_sorted_by_card_type["spells"], inline=True)
+                embed.add_field(name="Equipments and Landmarks", value=deck_sorted_by_card_type["other"], inline=True)
+
+                await message.channel.send(embed=embed)
+
+            # SHOW CARD INFO
+            elif message_content.startswith("!card "):
+                split_message = message_content.split(" ", 1)
+                card_name = split_message[1]
+                card = card_pool.get_card_by_card_name(card_name=card_name)
+                found_card_name = card.name
+                assemble_card_image(card_pool=card_pool, card=card)
+                embed = discord.Embed(title=found_card_name.capitalize())
+                file = discord.File("./images/card.jpg", filename="card.jpg")
+                embed.set_image(url="attachment://card.jpg")
+
+                await message.channel.send(file= file, embed=embed)
+            
             # default deckroll
-            if message_content == "!deckroll":
+            elif message_content == "!deckroll":
                 deckcode = default_deck_roll.roll_deck()
                 print(f"{message.author.name} {message_content} --> {deckcode}")
                 if SEND_DECKCODE:
                     await channel.send(deckcode)
                 if SEND_DECKLINK:
                     await channel.send(DECKLINK_PREFIX + deckcode)
-
+            
             elif message_content.startswith(
                 "!deckroll"
             ) and "help" in message_content:

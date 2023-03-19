@@ -2,6 +2,9 @@ from typing import DefaultDict
 from collections import defaultdict
 from CardPool import CardPool
 import lor_deckcodes
+from typing import List, Dict
+from CardData import CardData
+
 
 class Deck:
     def __init__(self, card_pool: CardPool) -> None:
@@ -47,3 +50,40 @@ class Deck:
         if card.is_champion and self.amount_champions + count > self.max_champions:
             raise ValueError("With the addition of the card the maximum amount of champions would be exceeded")
         self.cards_and_counts[card_code] += count
+
+    def load_deck_from_deckcode(self, deckcode: str) -> None:
+        self.max_cards = 100
+        self.max_champions = 100
+        deck = lor_deckcodes.LoRDeck.from_deckcode(deckcode)
+        for card in deck:
+            count, card_code = card.split(":")
+            self.add_card_and_count(card_code=card_code, count=int(count))
+
+    def sort_deck_by_cost(self) -> List[CardData]:
+        deck_with_card_data: List[CardData] = []
+        for card_code in self.cards_and_counts.keys():
+            if self.cards_and_counts[card_code] > 0:
+                card_data = self.card_pool.get_card_by_card_code(card_code=card_code)
+                deck_with_card_data.append(card_data)
+        sorted_deck = sorted(deck_with_card_data, key=lambda x:x.cost)
+        return sorted_deck
+    
+    def sort_deck_by_card_type(self) -> Dict[str, str]:
+        sorted_deck = self.sort_deck_by_cost()
+        deck_by_card_type = {
+            "champions": "",
+            "non_champions": "",
+            "spells": "",
+            "other": ""
+        }
+        for card in sorted_deck:
+            card_representation = f"{self.cards_and_counts[card.card_code]}x {card.name}"
+            if card.is_champion:
+                deck_by_card_type["champions"] += card_representation + "\n"
+            elif card.card_type == "Unit" and not card.is_champion:
+                deck_by_card_type["non_champions"] += card_representation + "\n"
+            elif card.card_type == "Spell":
+                deck_by_card_type["spells"] += card_representation + "\n"
+            else:
+                deck_by_card_type["other"] += card_representation + "\n"
+        return deck_by_card_type
