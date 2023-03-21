@@ -8,7 +8,7 @@ from discord.ext import commands
 from copy import deepcopy
 import re
 from tenacity import RetryError
-from assemble_card_image import assemble_card_image
+from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_ar
 
 # CARD POOL OPTIONS
 # IF cards should get fetched from API (needs some time for the first run - up to a few minutes)
@@ -24,8 +24,6 @@ DECKROLL_DECK_PREFIX: str = "https://app.mobalytics.gg/lor/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
 START_DISCORD_BOT: bool = True
-SEND_DECKCODE: bool = False
-SEND_DECKLINK: bool = True
 
 # INIT DECKROLL VALUES WITH DEFAULT VALUES
 amount_regions_default = 2
@@ -81,44 +79,48 @@ def run_discord_bot() -> None:
             message_content: str = message.content.lower()
 
             # DISPLAY DECK
-            if message_content.startswith("!deck "):               
-                split_message = message_content.split(" ", 1)
-                deckcode = split_message[1]
-                deck = Deck(card_pool=card_pool)
-                deck.load_deck_from_deckcode(deckcode=deckcode)
-                url = f"{DECKLINK_PREFIX}{deckcode}"
-                deck_sorted_by_card_type = deck.sort_deck_by_card_type()
+            if message_content.startswith("!deck "):          
+                split_message = message_content.split(" ")
+                if len(split_message) > 1:
+                    deckcode = split_message[1]
+                    deck_url = DECKLINK_PREFIX + deckcode
+                    await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
 
-                embed=discord.Embed(title="Decklink runeterra.ar", url=url)
-                embed.set_thumbnail(url="https://static.wikia.nocookie.net/leagueoflegends/images/2/2c/Legends_of_Runeterra_icon.png/revision/latest?cb=20191020214918")
-                embed.add_field(name="Champions", value=deck_sorted_by_card_type["champions"], inline=True)
-                embed.add_field(name="Follower", value=deck_sorted_by_card_type["non_champions"], inline=True)
-                embed.add_field(name="Spells", value=deck_sorted_by_card_type["spells"], inline=True)
-                embed.add_field(name="Equipments and Landmarks", value=deck_sorted_by_card_type["other"], inline=True)
+                    # send screenshot in Discord
+                    embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+                    file = discord.File("./images/screenshot.png", filename="screenshot.png")
+                    embed.set_image(url="attachment://screenshot.png")
 
-                await message.channel.send(embed=embed)
+                    await message.channel.send(file=file, embed=embed)
 
             # SHOW CARD INFO
             elif message_content.startswith("!card "):
                 split_message = message_content.split(" ", 1)
-                card_name = split_message[1]
-                card = card_pool.get_card_by_card_name(card_name=card_name)
-                found_card_name = card.name
-                assemble_card_image(card_pool=card_pool, card=card)
-                embed = discord.Embed(title=found_card_name.capitalize())
-                file = discord.File("./images/card.jpg", filename="card.jpg")
-                embed.set_image(url="attachment://card.jpg")
+                if len(split_message) > 1:
+                    card_name = split_message[1]
+                    card = card_pool.get_card_by_card_name(card_name=card_name)
+                    found_card_name = card.name
+                    assemble_card_image(card_pool=card_pool, card=card)
+                    embed = discord.Embed(title=found_card_name.capitalize())
+                    file = discord.File("./images/card.jpg", filename="card.jpg")
+                    embed.set_image(url="attachment://card.jpg")
 
-                await message.channel.send(file= file, embed=embed)
+                    await message.channel.send(file=file, embed=embed)
             
             # default deckroll
             elif message_content == "!deckroll":
                 deckcode = default_deck_roll.roll_deck()
                 print(f"{message.author.name} {message_content} --> {deckcode}")
-                if SEND_DECKCODE:
-                    await channel.send(deckcode)
-                if SEND_DECKLINK:
-                    await channel.send(DECKROLL_DECK_PREFIX + deckcode)
+
+                deck_url = DECKLINK_PREFIX + deckcode
+                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
+
+                # send screenshot in Discord
+                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+                file = discord.File("./images/screenshot.png", filename="screenshot.png")
+                embed.set_image(url="attachment://screenshot.png")
+
+                await message.channel.send(file=file, embed=embed)
             
             elif message_content.startswith(
                 "!deckroll"
@@ -298,10 +300,16 @@ def run_discord_bot() -> None:
                     await channel.send("Even after 10 rolls no valid deck could be rolled for the given settings")
                     raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
                 print(f"{message.author.name}: {message_content} --> {deckcode}")
-                if SEND_DECKCODE:
-                    await channel.send(deckcode)
-                if SEND_DECKLINK:
-                    await channel.send(DECKROLL_DECK_PREFIX + deckcode)
+
+                deck_url = DECKLINK_PREFIX + deckcode
+                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
+
+                # send screenshot in Discord
+                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+                file = discord.File("./images/screenshot.png", filename="screenshot.png")
+                embed.set_image(url="attachment://screenshot.png")
+
+                await message.channel.send(file=file, embed=embed)
 
     client.run(token=TOKEN)
 
