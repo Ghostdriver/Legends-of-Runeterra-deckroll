@@ -35,7 +35,7 @@ def assemble_card_image(card_pool: CardPool, card: CardData):
     # Save the image
     new_img.save('images/card.jpg')
 
-async def screenshot_deck_from_runeterrra_ar(deckcode: str, card_pool: CardPool):
+async def screenshot_deck_from_runeterrra_ar(deckcode: str):
     # load deck from deckcode to see, that it's a regular deck
     #deck = Deck(card_pool=card_pool)
     #deck.load_deck_from_deckcode(deckcode=deckcode)
@@ -43,7 +43,6 @@ async def screenshot_deck_from_runeterrra_ar(deckcode: str, card_pool: CardPool)
     async with async_playwright() as playwright:
         firefox = playwright.firefox
         browser = await firefox.launch()
-        browser.new_page()
         page = await browser.new_page()
         await page.goto(deck_url)
         # Consent to use of personal data, if available
