@@ -38,9 +38,9 @@ def assemble_card_image(card_pool: CardPool, card: CardData):
 
 async def screenshot_deck_from_runeterrra_ar(deckcode: str, card_pool: CardPool):
     # load deck from deckcode to see, that it's a regular deck
-    deck = Deck(card_pool=card_pool)
-    deck.load_deck_from_deckcode(deckcode=deckcode)
-    deck_url = "https://runeterra.ar/decks/code/" + deckcode
+    #deck = Deck(card_pool=card_pool)
+    #deck.load_deck_from_deckcode(deckcode=deckcode)
+    deck_url = "https://runeterra.ar/decks/bot/" + deckcode
     async with async_playwright() as playwright:
         firefox = playwright.firefox
         browser = await firefox.launch()
@@ -52,6 +52,6 @@ async def screenshot_deck_from_runeterrra_ar(deckcode: str, card_pool: CardPool)
         # Move mouse away (runeterra.ar symbol in the lower right corner) to avoid hovering over a card
         await page.locator("div.dateconte").click()
         # Wait till cards are loaded
-        await page.wait_for_timeout(500)
+        await page.wait_for_timeout(2000)
         await page.locator("#screen.screencolor.imgbackdeck").screenshot(path="images/screenshot.png")
         await browser.close()
