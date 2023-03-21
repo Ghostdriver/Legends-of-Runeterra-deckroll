@@ -83,7 +83,7 @@ def run_discord_bot() -> None:
                 if len(split_message) > 1:
                     deckcode = split_message[1]
                     deck_url = DECKLINK_PREFIX + deckcode
-                    await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
+                    await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
 
                     # send screenshot in Discord
                     embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
@@ -113,7 +113,7 @@ def run_discord_bot() -> None:
 
                 await message.channel.send(deckcode)
                 deck_url = DECKLINK_PREFIX + deckcode
-                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
+                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
 
                 # send screenshot in Discord
                 embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
@@ -303,7 +303,7 @@ def run_discord_bot() -> None:
 
                 await message.channel.send(deckcode)
                 deck_url = DECKLINK_PREFIX + deckcode
-                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
+                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
 
                 # send screenshot in Discord
                 embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
