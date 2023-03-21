@@ -1,0 +1,456 @@
+[
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO011T5.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO011T5-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 0,
+      "cost": 1,
+      "health": 0,
+      "description": "<link=card.selfRef><style=AssociatedCard>Coins</style></link> stack.\r\nRefill <style=Variable>1</style> mana.",
+      "descriptionRaw": "Coins stack.\r\nRefill 1 mana.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "\"What can I say? I'm a generous guy.\" - Sett",
+      "artistName": "Kudos Productions",
+      "name": "Coin",
+      "cardCode": "07IO011T5",
+      "keywords": [
+        "Burst"
+      ],
+      "keywordRefs": [
+        "Burst"
+      ],
+      "spellSpeed": "Burst",
+      "spellSpeedRef": "Burst",
+      "rarity": "None",
+      "rarityRef": "None",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Spell",
+      "collectible": false,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO009.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO009-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 1,
+      "cost": 2,
+      "health": 2,
+      "description": "<link=vocab.NexusStrike><style=Vocab>Nexus Strike</style></link>: Create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "Nexus Strike: Create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "Amid ambitious anglers and self-interested schemers, Lise has the one quality Sett prizes above all: reliability. She is never off, never short, and has never given Sett cause to wonder. This has granted Lise his backing and a warning to any seeking to stir up trouble: Bet against the House, and lose.",
+      "artistName": "Kudos Productions",
+      "name": "Attentive Accountant",
+      "cardCode": "07IO009",
+      "keywords": [
+        "Elusive"
+      ],
+      "keywordRefs": [
+        "Elusive"
+      ],
+      "spellSpeed": "",
+      "spellSpeedRef": "",
+      "rarity": "RARE",
+      "rarityRef": "Rare",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Unit",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 0,
+      "cost": 2,
+      "health": 0,
+      "description": "<link=keyword.Recall><style=Keyword>Recall</style></link> an ally and create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand, or spend 5 mana to <link=keyword.Recall><style=Keyword>Recall</style></link> an enemy and create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "Recall an ally and create a Coin in hand, or spend 5 mana to Recall an enemy and create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "“I’ll only come in under two conditions. First, if your opponent is havin’ too much fun wreckin’ ya. Second, you’re the one havin’ too much fun, and I want my piece too!” - Pit Professional",
+      "artistName": "Kudos Productions",
+      "name": "Tag Out!",
+      "cardCode": "07IO020",
+      "keywords": [
+        "Fast"
+      ],
+      "keywordRefs": [
+        "Fast"
+      ],
+      "spellSpeed": "Fast",
+      "spellSpeedRef": "Fast",
+      "rarity": "RARE",
+      "rarityRef": "Rare",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Spell",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020T2.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020T2-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 0,
+      "cost": 5,
+      "health": 0,
+      "description": "<link=keyword.Recall><style=Keyword>Recall</style></link> an enemy and create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "Recall an enemy and create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "“I’ll only come in under two conditions. First, if your opponent is havin’ too much fun wreckin’ ya. Second, you’re the one havin’ too much fun, and I want my piece too!” - Pit Professional",
+      "artistName": "Kudos Productions",
+      "name": "Tag Out!",
+      "cardCode": "07IO020T2",
+      "keywords": [
+        "Fast"
+      ],
+      "keywordRefs": [
+        "Fast"
+      ],
+      "spellSpeed": "Fast",
+      "spellSpeedRef": "Fast",
+      "rarity": "None",
+      "rarityRef": "None",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Spell",
+      "collectible": false,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020T1.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO020T1-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 0,
+      "cost": 2,
+      "health": 0,
+      "description": "<link=keyword.Recall><style=Keyword>Recall</style></link> an ally and create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "Recall an ally and create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "“I’ll only come in under two conditions. First, if your opponent is havin’ too much fun wreckin’ ya. Second, you’re the one havin’ too much fun, and I want my piece too!” - Pit Professional",
+      "artistName": "Kudos Productions",
+      "name": "Tag Out!",
+      "cardCode": "07IO020T1",
+      "keywords": [
+        "Fast"
+      ],
+      "keywordRefs": [
+        "Fast"
+      ],
+      "spellSpeed": "Fast",
+      "spellSpeedRef": "Fast",
+      "rarity": "None",
+      "rarityRef": "None",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Spell",
+      "collectible": false,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO012.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO012-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 3,
+      "cost": 3,
+      "health": 3,
+      "description": "When I'm summoned, create a <link=keyword.Fleeting><sprite name=Fleeting><style=Keyword>Fleeting</style></link> <link=card.selfRef><style=AssociatedCard>Bout Security</style></link> in hand and grant other <link=card.selfRef><style=AssociatedCard>Bout Security</style></link> +1|+1.\r\n<link=vocab.Empowered><style=Vocab>Empowered</style></link> 5: <link=keyword.Quick Strike><sprite name=QuickStrike><style=Keyword>Quick Attack</style></link>.",
+      "descriptionRaw": "When I'm summoned, create a Fleeting Bout Security in hand and grant other Bout Security +1|+1.\r\nEmpowered 5: Quick Attack.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "\" “If they think you’re thick, go on and let ‘em. Let the bad apples think they’re safe to run their games--there ain’t a thing in life better than the look in their eyes when they realize they underestimated you.” - Sett",
+      "artistName": "Kudos Productions",
+      "name": "Bout Security",
+      "cardCode": "07IO012",
+      "keywords": [],
+      "keywordRefs": [],
+      "spellSpeed": "",
+      "spellSpeedRef": "",
+      "rarity": "RARE",
+      "rarityRef": "Rare",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Unit",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO019.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO019-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 3,
+      "cost": 4,
+      "health": 4,
+      "description": "<link=vocab.Play><style=Vocab>Play</style></link>: Heal an ally or your Nexus 3 and create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "Play: Heal an ally or your Nexus 3 and create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "\"First round is about saying hello, and the second gets them cozy. Problems come out by the third, and from the fourth on, the lips get real loose--you wouldn't believe the kind of things I hear!\"",
+      "artistName": "Kudos Productions",
+      "name": "Smooth Mixologist",
+      "cardCode": "07IO019",
+      "keywords": [],
+      "keywordRefs": [],
+      "spellSpeed": "",
+      "spellSpeedRef": "",
+      "rarity": "COMMON",
+      "rarityRef": "Common",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Unit",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard",
+        "Commons Only"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name",
+        "client_Formats_CommonsOnly_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO014.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO014-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 3,
+      "cost": 5,
+      "health": 3,
+      "description": "<link=vocab.Play><style=Vocab>Play</style></link>: The next time you play a unit this round, summon an exact <link=keyword.Ephemeral><sprite name=Ephemeral><style=Keyword>Ephemeral</style></link> copy of it.",
+      "descriptionRaw": "Play: The next time you play a unit this round, summon an exact Ephemeral copy of it.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "Bingwen the Bird was once a fighter, so called for his cranelike stance and agility. Since retiring, he has taken up the mantle of a trainer--using his keen eye and firm hand to separate the fine talent from the coarse.",
+      "artistName": "Kudos Productions",
+      "name": "Master Bingwen, the Sieve",
+      "cardCode": "07IO014",
+      "keywords": [
+        "Elusive"
+      ],
+      "keywordRefs": [
+        "Elusive"
+      ],
+      "spellSpeed": "",
+      "spellSpeedRef": "",
+      "rarity": "EPIC",
+      "rarityRef": "Epic",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Unit",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name"
+      ]
+    },
+    {
+      "associatedCards": [],
+      "associatedCardRefs": [
+        "07IO011T5"
+      ],
+      "assets": [
+        {
+          "gameAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO013.png",
+          "fullAbsolutePath": "http://dd.b.pvp.net/4_3_0/set7/en_us/img/cards/07IO013-full.png"
+        }
+      ],
+      "regions": [
+        "Ionia"
+      ],
+      "regionRefs": [
+        "Ionia"
+      ],
+      "attack": 3,
+      "cost": 3,
+      "health": 3,
+      "description": "When I'm summoned, create a <link=card.create><style=AssociatedCard>Coin</style></link> in hand.",
+      "descriptionRaw": "When I'm summoned, create a Coin in hand.",
+      "levelupDescription": "",
+      "levelupDescriptionRaw": "",
+      "flavorText": "“Some are in it for the coin, others the blood, and some for the roar of the crowd. Me? Never could choose just one. I need it all, and I have everything here in spades.”",
+      "artistName": "Kudos Productions",
+      "name": "Pit Professional",
+      "cardCode": "07IO013",
+      "keywords": [],
+      "keywordRefs": [],
+      "spellSpeed": "",
+      "spellSpeedRef": "",
+      "rarity": "COMMON",
+      "rarityRef": "Common",
+      "subtypes": [],
+      "supertype": "",
+      "type": "Unit",
+      "collectible": true,
+      "set": "Set7",
+      "formats": [
+        "Eternal",
+        "Standard",
+        "Commons Only"
+      ],
+      "formatRefs": [
+        "client_Formats_Eternal_name",
+        "client_Formats_Standard_name",
+        "client_Formats_CommonsOnly_name"
+      ]
+    }
+  ]
