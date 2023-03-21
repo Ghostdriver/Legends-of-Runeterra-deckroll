@@ -110,7 +110,7 @@ def run_discord_bot() -> None:
             # default deckroll
             elif message_content == "!deckroll":
                 deckcode = default_deck_roll.roll_deck()
-                print(f"{message.author.name} {message_content} --> {deckcode}")
+                # print(f"{message.author.name} {message_content} --> {deckcode}")
 
                 deck_url = DECKLINK_PREFIX + deckcode
                 await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
@@ -299,7 +299,7 @@ def run_discord_bot() -> None:
                 except RetryError as e:
                     await channel.send("Even after 10 rolls no valid deck could be rolled for the given settings")
                     raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
-                print(f"{message.author.name}: {message_content} --> {deckcode}")
+                # print(f"{message.author.name}: {message_content} --> {deckcode}")
 
                 deck_url = DECKLINK_PREFIX + deckcode
                 await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
