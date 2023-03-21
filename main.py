@@ -2,7 +2,6 @@ from typing import  Dict, Literal
 from CardData import ALL_REGIONS, CARD_SETS, RARITIES
 from CardPool import CardPool
 from Deckroll import Deckroll
-from Deck import Deck
 import discord
 from discord.ext import commands
 from copy import deepcopy
@@ -112,6 +111,7 @@ def run_discord_bot() -> None:
                 deckcode = default_deck_roll.roll_deck()
                 # print(f"{message.author.name} {message_content} --> {deckcode}")
 
+                await message.channel.send(deckcode)
                 deck_url = DECKLINK_PREFIX + deckcode
                 await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
 
@@ -301,6 +301,7 @@ def run_discord_bot() -> None:
                     raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
                 # print(f"{message.author.name}: {message_content} --> {deckcode}")
 
+                await message.channel.send(deckcode)
                 deck_url = DECKLINK_PREFIX + deckcode
                 await screenshot_deck_from_runeterrra_ar(deckcode=deckcode, card_pool=card_pool)
 
