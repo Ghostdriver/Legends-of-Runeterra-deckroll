@@ -3,6 +3,22 @@ from typing import List, Dict
 CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7"]
 RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
+LANGUAGES = {
+    "de": "de_de",
+    "us": "en_us",
+    "es": "es_es",
+    "mx": "es_mx",
+    "fr": "fr_fr",
+    "it": "it_it",
+    "ja": "ja_jp",
+    "ko": "ko_kr",
+    "pl": "pl_pl",
+    "pt": "pt_br",
+    "th": "th_th",
+    "tr": "tr_tr",
+    "ru": "ru_ru",
+    "zh": "zh_tw"
+}
 
 class CardData:
     def __init__(self, card: Dict) -> None:

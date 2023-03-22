@@ -1,5 +1,5 @@
 from typing import  Dict, Literal
-from CardData import ALL_REGIONS, CARD_SETS, RARITIES
+from CardData import ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
 from Deckroll import Deckroll
 import discord
@@ -18,13 +18,15 @@ from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_
 # because I haven't found a good way to get ryze associated cards, a list with all card names belonging to him has to be given (a better solution would be appreciated)
 API_OR_LOCAL: Literal["API", "LOCAL"] = "API"
 RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
-DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/" # "https://masteringruneterra.com/deck/" # "https://app.mobalytics.gg/lor/decks/code/"
+SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
+DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
 DECKROLL_DECK_PREFIX: str = "https://app.mobalytics.gg/lor/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
 START_DISCORD_BOT: bool = True
 
 # INIT DECKROLL VALUES WITH DEFAULT VALUES
+language_default = "en_us"
 amount_regions_default = 2
 amount_cards_default = 40
 amount_champions_default = 6
@@ -78,19 +80,33 @@ def run_discord_bot() -> None:
             message_content: str = message.content.lower()
 
             # DISPLAY DECK
-            if message_content.startswith("!deck "):          
+            if message_content.startswith("!deck "):
+                deckcode = ""
+                language = language_default
                 split_message = message_content.split(" ")
-                if len(split_message) > 1:
+                if len(split_message) == 2:
                     deckcode = split_message[1]
-                    deck_url = DECKLINK_PREFIX + deckcode
-                    await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
+                if len(split_message) == 3 and len(split_message[1]) == 2:
+                    language = split_message[1]
+                    language_found = False
+                    for language_abbreviation in LANGUAGES.keys():
+                        if language == language_abbreviation:
+                            language=LANGUAGES[language]
+                            language_found = True
+                            break
+                    if not language_found:
+                        await message.channel.send(f"It seems, that you want to display a deck with localization, but the given language was not found. Following languages are available: {LANGUAGES.keys()}")
+                    deckcode = split_message[2]
+                
+                # screenshot and send embed in Discord
+                deck_url = f"{DECKLINK_PREFIX}{deckcode}?lang={language}"
+                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+                screenshot_url = f"{SCREENSHOT_PREFIX}{deckcode}?lang={language}"
+                await screenshot_deck_from_runeterrra_ar(screenshot_url=screenshot_url)
+                file = discord.File("./images/screenshot.png", filename="screenshot.png")
+                embed.set_image(url="attachment://screenshot.png")
+                await message.channel.send(file=file, embed=embed)
 
-                    # send screenshot in Discord
-                    embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
-                    file = discord.File("./images/screenshot.png", filename="screenshot.png")
-                    embed.set_image(url="attachment://screenshot.png")
-
-                    await message.channel.send(file=file, embed=embed)
 
             # SHOW CARD INFO
             elif message_content.startswith("!card "):
@@ -106,25 +122,7 @@ def run_discord_bot() -> None:
 
                     await message.channel.send(file=file, embed=embed)
             
-            # default deckroll
-            elif message_content == "!deckroll":
-                deckcode = default_deck_roll.roll_deck()
-                # print(f"{message.author.name} {message_content} --> {deckcode}")
-
-                await message.channel.send(deckcode)
-                deck_url = DECKLINK_PREFIX + deckcode
-                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
-
-                # send screenshot in Discord
-                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
-                file = discord.File("./images/screenshot.png", filename="screenshot.png")
-                embed.set_image(url="attachment://screenshot.png")
-
-                await message.channel.send(file=file, embed=embed)
-            
-            elif message_content.startswith(
-                "!deckroll"
-            ) and "help" in message_content:
+            elif message_content == "!deckroll help":
                 title = "The LoR Deckroll bot can be used for very individual deckrolls"
                 help_message = """
                 The bot is open source and can be found under:
@@ -146,6 +144,9 @@ def run_discord_bot() -> None:
                 this default deckroll can be indivualized with the following modifications (combine them as you want,
                 but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
+                - lang=<language> --> lang=es
+                de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
+                ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
                 - regions=<number> --> regions=10)
                 - cards=<number> --> cards=60)
                 - champions=<number> --> champions=10)
@@ -157,7 +158,7 @@ def run_discord_bot() -> None:
                 BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
                 - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
-                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde
+                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7
                 - change card weights based on their rarity: <rarity>=<number> --> epic=10
                 Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
                 """
@@ -171,6 +172,7 @@ def run_discord_bot() -> None:
                 "!deckroll"
             ):
                 # init values with default values
+                language = language_default
                 amount_regions = amount_regions_default
                 amount_cards = amount_cards_default
                 amount_champions = amount_champions_default
@@ -178,6 +180,16 @@ def run_discord_bot() -> None:
                 cards_and_weights = deepcopy(cards_and_weights_default)
                 count_chances = deepcopy(count_chances_default)
                 count_chances_two_remaining_deck_slots = deepcopy(count_chances_two_remaining_deck_slots_default)
+
+                # language
+                language_regex = r".*lang=([a-z]{2}).*"
+                language_regex_match = re.match(language_regex, message_content)
+                if bool(language_regex_match):
+                    for language_abbreviation in LANGUAGES:
+                        language_match = language_regex_match.group(1)
+                        if language_match == language_abbreviation:
+                            language = LANGUAGES[language_match]
+                            break
 
                 # amount regions
                 MAX_REGIONS = len(all_regions) + len(card_pool.runeterra_champions) - 1
@@ -302,14 +314,14 @@ def run_discord_bot() -> None:
                 # print(f"{message.author.name}: {message_content} --> {deckcode}")
 
                 await message.channel.send(deckcode)
-                deck_url = DECKLINK_PREFIX + deckcode
-                await screenshot_deck_from_runeterrra_ar(deckcode=deckcode)
 
-                # send screenshot in Discord
+                # screenshot and send embed in Discord
+                deck_url = f"{DECKLINK_PREFIX}{deckcode}?lang={language}"
                 embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+                screenshot_url = f"{SCREENSHOT_PREFIX}{deckcode}?lang={language}"
+                await screenshot_deck_from_runeterrra_ar(screenshot_url=screenshot_url)
                 file = discord.File("./images/screenshot.png", filename="screenshot.png")
                 embed.set_image(url="attachment://screenshot.png")
-
                 await message.channel.send(file=file, embed=embed)
 
     client.run(token=TOKEN)
