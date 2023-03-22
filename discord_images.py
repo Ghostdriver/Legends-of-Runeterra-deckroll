@@ -44,14 +44,6 @@ async def screenshot_deck_from_runeterrra_ar(deckcode: str):
         firefox = playwright.firefox
         browser = await firefox.launch()
         page = await browser.new_page()
-        await page.goto(deck_url)
-        # Consent to use of personal data, if available
-        #consent_accept_button = page.locator("button.fc-button.fc-cta-consent.fc-primary-button")
-        #if consent_accept_button:
-        #    await consent_accept_button.click()
-        # Move mouse away (runeterra.ar symbol in the lower right corner) to avoid hovering over a card
-        #await page.locator("div.dateconte").click()
-        # Wait till site is loaded
-        await page.wait_for_timeout(1000)
+        await page.goto(deck_url, wait_until="domcontentloaded")
         await page.locator("#screen.screencolor.imgbackdeck").screenshot(path="images/screenshot.png")
         await browser.close()
