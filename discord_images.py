@@ -44,6 +44,6 @@ async def screenshot_deck_from_runeterrra_ar(deckcode: str):
         firefox = playwright.firefox
         browser = await firefox.launch()
         page = await browser.new_page()
-        await page.goto(deck_url, wait_until="domcontentloaded")
+        await page.goto(deck_url, wait_until="load")
         await page.locator("#screen.screencolor.imgbackdeck").screenshot(path="images/screenshot.png")
         await browser.close()
