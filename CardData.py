@@ -5,7 +5,7 @@ RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 LANGUAGES = {
     "de": "de_de",
-    "us": "en_us",
+    "en": "en_us",
     "es": "es_es",
     "mx": "es_mx",
     "fr": "fr_fr",

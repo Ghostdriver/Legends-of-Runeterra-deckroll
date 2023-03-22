@@ -1,14 +1,17 @@
-from typing import List, Dict, Literal
-from CardData import CardData, CARD_SETS
+from typing import List, Dict
+from CardData import CardData, CARD_SETS, LANGUAGES
 import requests
 import json
-import os
 import string
 
+DEFAULT_LOCALE = "en_us"
+
 class CardPool:
-    def __init__(self, api_or_local: Literal["API", "LOCAL"], ryze_follower_names: List[str] = []) -> None:
+    def __init__(self, ryze_follower_names: List[str] = []) -> None:
         '''init card pool'''
-        self.all_cards: List[CardData] = []
+        self.all_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
+        self.collectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
+        self.uncollectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
         self.collectible_cards: List[CardData] = []
         self.uncollectible_cards: List[CardData] = []
         self.all_champions: List[CardData] = []
@@ -34,28 +37,29 @@ class CardPool:
             "Varus": self.kayn_and_varus_followers
         }
 
-        # get all cards
-        if api_or_local == "API":
-            card_sets = CARD_SETS
-            for card_set in card_sets:
-                r = requests.get(f"https://dd.b.pvp.net/latest/{card_set}/en_us/data/{card_set}-en_us.json")
+        # get all cards in all languages
+        for language in self.all_cards_with_localization.keys():
+            for card_set in CARD_SETS:
+                r = requests.get(f"https://dd.b.pvp.net/latest/{card_set}/{language}/data/{card_set}-{language}.json")
                 if r.status_code == 200:
                     card_set_json = json.loads(r.content)
                     for card in card_set_json:
-                        self.all_cards.append(CardData(card))
+                        self.all_cards_with_localization[language].append(CardData(card))
                 else:
                     raise ConnectionError(f"Getting card set for {card_set} failed - Status Code: {r.status_code}")
-        elif api_or_local == "LOCAL":
-            CARD_SETS_DIR = "card_sets"
-            for card_set in os.listdir(CARD_SETS_DIR):
-                with open(os.path.join(CARD_SETS_DIR, card_set), 'r', encoding='UTF-8') as f:
-                    card_set_json = json.loads(f.read())
-                    for card in card_set_json:
-                        self.all_cards.append(CardData(card))
-        print(f"CardPool initialized with {len(self.all_cards)} total cards")
+            
+            print(f"CardPool for locale {language} initialized with {len(self.all_cards_with_localization[language])} total cards")
+
+        # divide all cards in all languages into collectible and uncollectible cards
+        for language, cards in self.all_cards_with_localization.items():
+            for card in cards:
+                if card.is_collectible:
+                    self.collectible_cards_with_localization[language].append(card)
+                else:
+                    self.uncollectible_cards_with_localization[language].append(card)
 
         # categorize cards
-        for card in self.all_cards:
+        for card in self.all_cards_with_localization[DEFAULT_LOCALE]:
             if card.is_collectible:
                 self.collectible_cards.append(card)
                 if card.is_champion:
@@ -118,19 +122,21 @@ class CardPool:
                 self.ryze_followers.append(non_champion)
         print(f"CardPool initialized with {len(self.ryze_followers)} Cards for Ryze")
 
-    def get_card_by_card_code(self, card_code: str) -> CardData:
-        for card in self.all_cards:
+    def get_card_by_card_code(self, card_code: str, language: str = "en_us") -> CardData:
+        for card in self.all_cards_with_localization[language]:
             if card.card_code == card_code:
                 return card
         raise ValueError(f"No Card with card code {card_code} found")
     
-    def get_card_by_card_name(self, card_name: str) -> CardData:
-        for card in self.all_cards:
+    def get_card_by_card_name(self, card_name: str, language: str = "en_us") -> CardData:
+        for card in self.all_cards_with_localization[language]:
             if card_name.lower() == card.name.lower():
                 return card
-        for card in self.all_cards:
+        for card in self.all_cards_with_localization[language]:
             if card_name.lower() in card.name.lower():
                 return card
+        if language != DEFAULT_LOCALE:
+            return self.get_card_by_card_name(card_name=card_name, language=DEFAULT_LOCALE)
         raise ValueError(f"No Card with card name {card_name} found")
 
     def create_txt_file_with_card_names(self) -> None:

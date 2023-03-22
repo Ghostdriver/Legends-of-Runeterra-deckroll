@@ -1,4 +1,4 @@
-from typing import  Dict, Literal
+from typing import  Dict
 from CardData import ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
 from Deckroll import Deckroll
@@ -9,14 +9,8 @@ import re
 from tenacity import RetryError
 from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_ar
 
-# CARD POOL OPTIONS
-# IF cards should get fetched from API (needs some time for the first run - up to a few minutes)
 # CARD_SETS in CardData needs to be updated
-# if cards should get read out from local files (really fast) the newest json files have to be in the local_cards_sets_folder
-# those can be retrieved from https://developer.riotgames.com/docs/lor with the names "https://dd.b.pvp.net/latest/{card_set}-lite-en_us.zip"
-# then just unzip those and put the {card_set}-1en_us.json in the extracted folder en_us/data into the directory
 # because I haven't found a good way to get ryze associated cards, a list with all card names belonging to him has to be given (a better solution would be appreciated)
-API_OR_LOCAL: Literal["API", "LOCAL"] = "API"
 RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
 SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
 DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
@@ -34,9 +28,9 @@ all_regions = ALL_REGIONS
 regions_and_weights_default: Dict[str, int] = {}
 for region in all_regions:
     regions_and_weights_default[region] = 1
-card_pool = CardPool(api_or_local=API_OR_LOCAL, ryze_follower_names=RYZE_FOLLOWER_NAMES)
+card_pool = CardPool(ryze_follower_names=RYZE_FOLLOWER_NAMES)
 # Creates the file card_names.txt, which has all card names of collectible cards and can be used for scribbl for example
-card_pool.create_txt_file_with_card_names()
+# card_pool.create_txt_file_with_card_names()
 cards_and_weights_default: Dict[str, int] = {}
 for collectible_card in card_pool.collectible_cards:
     cards_and_weights_default[collectible_card.card_code] = 1
@@ -110,17 +104,28 @@ def run_discord_bot() -> None:
 
             # SHOW CARD INFO
             elif message_content.startswith("!card "):
-                split_message = message_content.split(" ", 1)
-                if len(split_message) > 1:
-                    card_name = split_message[1]
-                    card = card_pool.get_card_by_card_name(card_name=card_name)
-                    found_card_name = card.name
-                    assemble_card_image(card_pool=card_pool, card=card)
-                    embed = discord.Embed(title=found_card_name.capitalize())
-                    file = discord.File("./images/card.jpg", filename="card.jpg")
-                    embed.set_image(url="attachment://card.jpg")
+                language = language_default
+                language_found = False
+                split_message = message_content.split(" ")
+                if len(split_message) > 2 and len(split_message[1]) == 2:
+                    for language_abbreviation in LANGUAGES.keys():
+                        if split_message[1] == language_abbreviation:
+                            language=LANGUAGES[split_message[1]]
+                            language_found = True
+                            break
+                if language_found:
+                    card_name = " ".join(split_message[2:])
+                else:
+                    card_name = " ".join(split_message[1:])
+                    
+                card = card_pool.get_card_by_card_name(card_name=card_name, language=language)
+                found_card_name = card.name
+                assemble_card_image(card_pool=card_pool, card=card, language=language)
+                embed = discord.Embed(title=found_card_name)
+                file = discord.File("./images/card.jpg", filename="card.jpg")
+                embed.set_image(url="attachment://card.jpg")
 
-                    await message.channel.send(file=file, embed=embed)
+                await message.channel.send(file=file, embed=embed)
             
             elif message_content == "!deckroll help":
                 title = "The LoR Deckroll bot can be used for very individual deckrolls"
