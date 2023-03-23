@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from copy import deepcopy
 import re
+import random
 from tenacity import RetryError
 from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_ar
 
@@ -127,8 +128,9 @@ def run_discord_bot() -> None:
 
                 await message.channel.send(file=file, embed=embed)
             
+            # DECKROLL HELP
             elif message_content == "!deckroll help":
-                title = "The LoR Deckroll bot can be used for very individual deckrolls"
+                title = "Deckroll help"
                 help_message = """
                 The bot is open source and can be found under:
                 https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll
@@ -172,10 +174,8 @@ def run_discord_bot() -> None:
                 )
                 await channel.send(embed=embed)
 
-            # individual deckroll
-            elif message_content.startswith(
-                "!deckroll"
-            ):
+            # DECKROLL
+            elif message_content.startswith("!deckroll"):
                 # init values with default values
                 language = language_default
                 amount_regions = amount_regions_default
@@ -327,6 +327,114 @@ def run_discord_bot() -> None:
                 await screenshot_deck_from_runeterrra_ar(screenshot_url=screenshot_url)
                 file = discord.File("./images/screenshot.png", filename="screenshot.png")
                 embed.set_image(url="attachment://screenshot.png")
+                await message.channel.send(file=file, embed=embed)
+
+            # CARDROLL HELP
+            elif message_content == "!cardroll help":
+                title = "Cardroll help"
+                help_message = """
+                The bot is open source and can be found under:
+                https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll
+
+                cardroll just picks one random card from all collectible cards
+
+                the default cardroll can be indivualized with the following modifications (combine them as you want,
+                but wrong inputs and e.g. excluding all cards will return an error or just give no response,
+                also if the modification doesn't get noticed by the input parser it just gets ignored):
+                - lang=<language> --> lang=es
+                de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
+                ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
+
+                - when modifying the card weights the standard weight of 1 is multiplied with the modification
+                --> e.g. passing Demacia=10 and Champion=10, Garen is 100 times as likely as non demacian, non champion cards
+                
+                - change card weights based on their region (standard weight is 1) with <region-name>=<number>
+                e.g. exclude region Demacia=0 // make region very very likely Runeterra=10000
+                the region names, that have to be used, so the modification gets recognized are:
+                BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
+
+                - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
+                Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
+                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7
+
+                - change card weights based on their rarity: <rarity>=<number> --> epic=10
+                Rarities: common, rare, epic champion
+                """
+                embed = discord.Embed(
+                    title=title, description=help_message, color=0xF90202
+                )
+                await channel.send(embed=embed)
+            # CARDROLLL
+            elif message_content.startswith("!cardroll"):
+                # init values with default values
+                language = language_default
+                regions_and_weights = deepcopy(regions_and_weights_default)
+                cards_and_weights = deepcopy(cards_and_weights_default)
+
+                # language
+                language_regex = r".*lang=([a-z]{2}).*"
+                language_regex_match = re.match(language_regex, message_content)
+                if bool(language_regex_match):
+                    for language_abbreviation in LANGUAGES:
+                        language_match = language_regex_match.group(1)
+                        if language_match == language_abbreviation:
+                            language = LANGUAGES[language_match]
+                            break
+                
+                MAX_CARD_WEIGHT_CHANGE_FACTOR = 10000
+                # change card weights based on their region
+                for region_name in ALL_REGIONS:   
+                    card_weight_change_regex = rf".*{region_name.lower()}=(\d+).*"
+                    card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
+                    if bool(card_weight_change_regex_match):
+                        card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                        if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                            error = f"detected card weight change for card set {card_set} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
+                            await channel.send(error)
+                            raise ValueError(error)
+                        for collectible_card in card_pool.collectible_cards:
+                            card_region_refs_lower = [card_region_ref.lower() for card_region_ref in collectible_card.region_refs]
+                            if region_name.lower() in card_region_refs_lower:
+                                cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+                        
+                # change card weights based on their set              
+                for card_set in CARD_SETS:
+                    card_weight_change_regex = rf".*{card_set.lower()}=(\d+).*"
+                    card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
+                    if bool(card_weight_change_regex_match):
+                        card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                        if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                            error = f"detected card weight change for card set {card_set} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
+                            await channel.send(error)
+                            raise ValueError(error)
+                        for collectible_card in card_pool.collectible_cards:
+                            if collectible_card.card_set.lower() == card_set.lower():
+                                cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+
+                # change card weights based on their rarity
+                for rarity in RARITIES:
+                    card_weight_change_regex = rf".*{rarity.lower()}=(\d+).*"
+                    card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
+                    if bool(card_weight_change_regex_match):
+                        card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                        if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                            error = f"detected card weight change for rarity {rarity} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
+                            await channel.send(error)
+                            raise ValueError(error)
+                        for collectible_card in card_pool.collectible_cards:
+                            if collectible_card.rarity_ref.lower() == rarity.lower():
+                                cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+
+                random_card_code = random.choices(list(cards_and_weights.keys()), weights=list(cards_and_weights.values()))[0]
+                # print(f"{message.author.name}: {message_content} --> {deckcode}")
+
+                card = card_pool.get_card_by_card_code(card_code=random_card_code, language=language)
+                random_card_name = card.name
+                assemble_card_image(card_pool=card_pool, card=card, language=language)
+                embed = discord.Embed(title=random_card_name)
+                file = discord.File("./images/card.jpg", filename="card.jpg")
+                embed.set_image(url="attachment://card.jpg")
+
                 await message.channel.send(file=file, embed=embed)
 
     client.run(token=TOKEN)

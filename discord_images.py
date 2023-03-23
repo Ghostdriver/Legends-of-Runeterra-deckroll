@@ -17,23 +17,17 @@ def assemble_card_image(card_pool: CardPool, card: CardData, language: str = "en
         card_image = Image.open(f"images/image{index}.png")
         image_list.append(card_image)
     
-    # merge images
-    # Open images and store them in a list
-    total_width = 0
-    max_height = 0
-    # find the width and height of the final image
-    for img in image_list:
-        total_width += img.size[0]
-        max_height = max(max_height, img.size[1])
-    # create a new image with the appropriate height and width
-    new_img = Image.new('RGB', (total_width, max_height))
-    # Write the contents of the new image
+    image_size = card_image.size
+    total_width = len(image_list) * image_size[0]
+
+    all_in_one_img = Image.new('RGB', (total_width, image_size[1]))
+
     current_width = 0
-    for img in image_list:
-        new_img.paste(img, (current_width, 0))
-        current_width += img.size[0]
-    # Save the image
-    new_img.save('images/card.jpg')
+    for image in image_list:
+        all_in_one_img.paste(image, (current_width, 0))
+        current_width += image.size[0]
+
+    all_in_one_img.save('images/card.jpg')
 
 async def screenshot_deck_from_runeterrra_ar(screenshot_url: str):
     async with async_playwright() as playwright:
