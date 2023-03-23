@@ -338,15 +338,15 @@ def run_discord_bot() -> None:
 
                 cardroll just picks one random card from all collectible cards
 
-                the default cardroll can be indivualized with the following modifications (combine them as you want,
-                but wrong inputs and e.g. excluding all cards will return an error or just give no response,
+                the default cardroll (!cardroll) can be indivualized with the following modifications
+                (combine them as you want, but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
                 - lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
 
                 - when modifying the card weights the standard weight of 1 is multiplied with the modification
-                --> e.g. passing Demacia=10 and Champion=10, Garen is 100 times as likely as non demacian, non champion cards
+                --> e.g. passing Demacia=100 and Champion=100, Garen is 10000 times as likely as non demacian, non champion cards
                 
                 - change card weights based on their region (standard weight is 1) with <region-name>=<number>
                 e.g. exclude region Demacia=0 // make region very very likely Runeterra=10000
