@@ -8,7 +8,7 @@ from copy import deepcopy
 import re
 import random
 from tenacity import RetryError
-from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_ar
+from discord_images import assemble_card_image, screenshot_deck_from_runeterrra_ar, assemble_deck_embed
 
 # CARD_SETS in CardData needs to be updated
 # because I haven't found a good way to get ryze associated cards, a list with all card names belonging to him has to be given (a better solution would be appreciated)
@@ -93,14 +93,9 @@ def run_discord_bot() -> None:
                         await message.channel.send(f"It seems, that you want to display a deck with localization, but the given language was not found. Following languages are available: {LANGUAGES.keys()}")
                     deckcode = split_message[2]
                 
-                # screenshot and send embed in Discord
-                deck_url = f"{DECKLINK_PREFIX}{deckcode}?lang={language}"
-                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
-                screenshot_url = f"{SCREENSHOT_PREFIX}{deckcode}?lang={language}"
-                await screenshot_deck_from_runeterrra_ar(screenshot_url=screenshot_url)
-                file = discord.File("./images/screenshot.png", filename="screenshot.png")
-                embed.set_image(url="attachment://screenshot.png")
-                await message.channel.send(file=file, embed=embed)
+                embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
+                
+                await message.channel.send(embed=embed)
 
 
             # SHOW CARD INFO
@@ -320,14 +315,9 @@ def run_discord_bot() -> None:
 
                 await message.channel.send(deckcode)
 
-                # screenshot and send embed in Discord
-                deck_url = f"{DECKLINK_PREFIX}{deckcode}?lang={language}"
-                embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
-                screenshot_url = f"{SCREENSHOT_PREFIX}{deckcode}?lang={language}"
-                await screenshot_deck_from_runeterrra_ar(screenshot_url=screenshot_url)
-                file = discord.File("./images/screenshot.png", filename="screenshot.png")
-                embed.set_image(url="attachment://screenshot.png")
-                await message.channel.send(file=file, embed=embed)
+                embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
+                
+                await message.channel.send(embed=embed)
 
             # CARDROLL HELP
             elif message_content == "!cardroll help":
