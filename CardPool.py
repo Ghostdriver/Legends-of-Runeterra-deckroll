@@ -7,8 +7,9 @@ import string
 DEFAULT_LOCALE = "en_us"
 
 class CardPool:
-    def __init__(self, ryze_follower_names: List[str] = []) -> None:
+    def __init__(self) -> None:
         '''init card pool'''
+        RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
         self.all_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
         self.collectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
         self.uncollectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
@@ -118,7 +119,7 @@ class CardPool:
         print(f"CardPool initialized with {len(self.kayn_and_varus_followers)} Cards for Kayn and Varus")
         # Ryze
         for non_champion in self.all_non_champions:
-            if non_champion.name in ryze_follower_names:
+            if non_champion.name in RYZE_FOLLOWER_NAMES:
                 self.ryze_followers.append(non_champion)
         print(f"CardPool initialized with {len(self.ryze_followers)} Cards for Ryze")
 

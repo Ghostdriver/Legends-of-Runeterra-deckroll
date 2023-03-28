@@ -51,7 +51,7 @@ def assemble_deck_embed(card_pool: CardPool, deckcode: str, language: str = "en_
     units_formatted = card_list_to_string(card_pool=card_pool, card_list=units, deck=deck, language=language)
     spells = deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Spell")
     spells_formatted = card_list_to_string(card_pool=card_pool, card_list=spells, deck=deck, language=language)
-    equipments_and_landmarks = deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Equpment") + deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Landmark")
+    equipments_and_landmarks = deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Equipment") + deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Landmark")
     equipments_and_landmarks_formatted = card_list_to_string(card_pool=card_pool, card_list=equipments_and_landmarks, deck=deck, language=language)
 
     embed=discord.Embed(title="Decklink runeterra.ar", url=deck_url)

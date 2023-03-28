@@ -72,5 +72,5 @@ class Deck:
             count, card_code = card.split(":")
             self.add_card_and_count(card_code=card_code, count=int(count))
 
-    def get_cards_by_card_type_sorted_by_cost_and_alphabetical(self, card_type: Literal["Champion", "Equpment", "Landmark", "Spell", "Unit"]) -> List[CardData]:
+    def get_cards_by_card_type_sorted_by_cost_and_alphabetical(self, card_type: Literal["Champion", "Equipment", "Landmark", "Spell", "Unit"]) -> List[CardData]:
         return sorted(self.deck_sorted_by_card_type[card_type], key=lambda card: (card.cost, card.name))
