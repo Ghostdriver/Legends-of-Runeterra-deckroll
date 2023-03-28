@@ -1,2 +1,2 @@
-source .venv/bin/activate
+source ./.venv/bin/activate
 poetry run python3 ./main.py
