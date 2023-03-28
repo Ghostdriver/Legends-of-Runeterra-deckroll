@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7"]
-CARD_TYPES_COLLECTIBLE_CARDS = ["Champion", "Equpment", "Landmark", "Spell", "Unit"]
+CARD_TYPES_COLLECTIBLE_CARDS = ["Champion", "Equipment", "Landmark", "Spell", "Unit"]
 RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 LANGUAGES = {
