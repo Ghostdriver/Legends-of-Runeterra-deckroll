@@ -112,14 +112,9 @@ def run_discord_bot() -> None:
                 else:
                     card_name = " ".join(split_message[1:])
                     
-                card = card_pool.get_card_by_card_name(card_name=card_name, language=language)
-                found_card_name = card.name
-                assemble_card_image(card_pool=card_pool, card=card, language=language)
-                embed = discord.Embed(title=found_card_name)
-                file = discord.File("./images/card.jpg", filename="card.jpg")
-                embed.set_image(url="attachment://card.jpg")
+                embed, file = assemble_card_image(card_pool=card_pool, card_name=card_name, language=language)
 
-                await message.channel.send(file=file, embed=embed)
+                await message.channel.send(embed=embed, file=file)
             
             # DECKROLL HELP
             elif message_content == "!deckroll help":
@@ -418,12 +413,10 @@ def run_discord_bot() -> None:
 
                 card = card_pool.get_card_by_card_code(card_code=random_card_code, language=language)
                 random_card_name = card.name
-                assemble_card_image(card_pool=card_pool, card=card, language=language)
-                embed = discord.Embed(title=random_card_name)
-                file = discord.File("./images/card.jpg", filename="card.jpg")
-                embed.set_image(url="attachment://card.jpg")
+                
+                embed, file = assemble_card_image(card_pool=card_pool, card_name=random_card_name, language=language)
 
-                await message.channel.send(file=file, embed=embed)
+                await message.channel.send(embed=embed, file=file)
 
     client.run(token=TOKEN)
 

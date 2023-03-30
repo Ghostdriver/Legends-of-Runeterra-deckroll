@@ -1,35 +1,33 @@
 from PIL import Image
 from CardData import CardData
 import urllib.request
-from typing import List
+from typing import List, Tuple
 from CardPool import CardPool
 from playwright.async_api import async_playwright
 import discord
 from Deck import Deck
 
-def assemble_card_image(card_pool: CardPool, card: CardData, language: str = "en_us"):
-    # Get image of the card and associated cards
-    image_list: List = []
-    urllib.request.urlretrieve(url=card.game_absolute_path, filename="images/image.png")
-    card_image = Image.open("images/image.png")
-    image_list.append(card_image)
-    for index, associated_card_code in enumerate(card.associated_card_refs):
-        associated_card = card_pool.get_card_by_card_code(card_code=associated_card_code, language=language)
-        urllib.request.urlretrieve(url=associated_card.game_absolute_path, filename=f"images/image{index}.png")
-        card_image = Image.open(f"images/image{index}.png")
-        image_list.append(card_image)
-    
-    image_size = card_image.size
-    total_width = len(image_list) * image_size[0]
+def assemble_card_image(card_pool: CardPool, card_name: str, language: str = "en_us") -> Tuple[discord.Embed, discord.File]:
+    # Put image of the card and associated cards in one image and save it
+    SINGLE_CARD_SIZE = (680, 1024)
+    ASSEMBLED_CARD_IMAGE_PATH = "images/card.jpg"
+    DISCORD_FILENAME = "card.jpg"
+    card = card_pool.get_card_by_card_name(card_name=card_name, language=language)
+    embed = discord.Embed(title=card.name)
 
-    all_in_one_img = Image.new('RGB', (total_width, image_size[1]))
+    # Go through the card and it's associated cards, retrieve the images and put them into one image
+    card_codes = [card.card_code] + card.associated_card_refs
+    all_in_one_img = Image.new('RGB', (SINGLE_CARD_SIZE[0] * len(card_codes), SINGLE_CARD_SIZE[1]))
+    for index, card_code in enumerate(card_codes):
+        card = card_pool.get_card_by_card_code(card_code=card_code, language=language)
+        card_image_path = urllib.request.urlretrieve(url=card.game_absolute_path)[0]
+        card_image = Image.open(card_image_path)
+        all_in_one_img.paste(card_image, (SINGLE_CARD_SIZE[0] * index, 0))
+    all_in_one_img.save(ASSEMBLED_CARD_IMAGE_PATH)
 
-    current_width = 0
-    for image in image_list:
-        all_in_one_img.paste(image, (current_width, 0))
-        current_width += image.size[0]
-
-    all_in_one_img.save('images/card.jpg')
+    file = discord.File(ASSEMBLED_CARD_IMAGE_PATH, filename=DISCORD_FILENAME)
+    embed.set_image(url=f"attachment://{DISCORD_FILENAME}")
+    return (embed, file)
 
 async def screenshot_deck_from_runeterrra_ar(screenshot_url: str):
     async with async_playwright() as playwright:
