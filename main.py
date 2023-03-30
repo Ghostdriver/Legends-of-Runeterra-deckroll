@@ -1,4 +1,4 @@
-from typing import  Dict
+from typing import  Dict, Literal
 from CardData import ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
 from Deckroll import Deckroll
@@ -18,7 +18,12 @@ CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_DECKS: int = 100
 START_DISCORD_BOT: bool = True
 
-# INIT DECKROLL VALUES WITH DEFAULT VALUES
+# INIT CARD_POOLS
+card_pool_standard = CardPool(format="client_Formats_Standard_name")
+card_pool_eternal = CardPool(format="client_Formats_Eternal_name")
+
+# INIT DEFAULT VALUES FOR DECKROLL
+format_default = "standard"
 language_default = "en_us"
 amount_regions_default = 2
 amount_cards_default = 40
@@ -27,12 +32,12 @@ all_regions = ALL_REGIONS
 regions_and_weights_default: Dict[str, int] = {}
 for region in all_regions:
     regions_and_weights_default[region] = 1
-card_pool = CardPool()
-# Creates the file card_names.txt, which has all card names of collectible cards and can be used for scribbl for example
-# card_pool.create_txt_file_with_card_names()
-cards_and_weights_default: Dict[str, int] = {}
-for collectible_card in card_pool.collectible_cards:
-    cards_and_weights_default[collectible_card.card_code] = 1
+cards_and_weights_standard_default: Dict[str, int] = {}
+for collectible_card in card_pool_standard.collectible_cards:
+    cards_and_weights_standard_default[collectible_card.card_code] = 1
+cards_and_weights_eternal_default: Dict[str, int] = {}
+for collectible_card in card_pool_eternal.collectible_cards:
+    cards_and_weights_eternal_default[collectible_card.card_code] = 1
 count_chances_default: Dict[int, int] = {
     1: 20,
     2: 30,
@@ -42,14 +47,19 @@ count_chances_two_remaining_deck_slots_default: Dict[int, int] = {
     1: 33,
     2: 67
 }
-default_deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions_default, amount_cards=amount_cards_default, amount_champions=amount_champions_default, regions_and_weights=regions_and_weights_default, cards_and_weights=cards_and_weights_default, count_chances=count_chances_default, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots_default)
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
+format: Literal["standard", "eternal"] = "standard"
+if format == "standard":
+    card_pool = card_pool_standard
+    cards_and_weights = deepcopy(cards_and_weights_standard_default)
+else:
+    card_pool = card_pool_eternal
+    cards_and_weights = deepcopy(cards_and_weights_eternal_default)
 amount_regions = amount_regions_default
 amount_cards = amount_cards_default
 amount_champions = amount_champions_default
 regions_and_weights = deepcopy(regions_and_weights_default)
-cards_and_weights = deepcopy(cards_and_weights_default)
 count_chances = deepcopy(count_chances_default)
 count_chances_two_remaining_deck_slots = deepcopy(count_chances_two_remaining_deck_slots_default)
 # deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
@@ -91,7 +101,7 @@ def run_discord_bot() -> None:
                         await message.channel.send(f"It seems, that you want to display a deck with localization, but the given language was not found. Following languages are available: {LANGUAGES.keys()}")
                     deckcode = split_message[2]
                 
-                embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
+                embed = assemble_deck_embed(card_pool=card_pool_eternal, deckcode=deckcode, language=language)
                 
                 await message.channel.send(embed=embed)
 
@@ -112,7 +122,7 @@ def run_discord_bot() -> None:
                 else:
                     card_name = " ".join(split_message[1:])
                     
-                embed, file = assemble_card_image(card_pool=card_pool, card_name=card_name, language=language)
+                embed, file = assemble_card_image(card_pool=card_pool_eternal, card_name=card_name, language=language)
 
                 await message.channel.send(embed=embed, file=file)
             
@@ -132,6 +142,7 @@ def run_discord_bot() -> None:
                 - then all non-champions and their amount is rolled until all total card slots are used
 
                 For the default deckroll just use !deckroll - the default settings are:
+                standard format, american english
                 2 regions, 40 cards, 6 champions, chance for every region and card is equal
                 card amount chances are for 1/2/3 ofs: 20%/30%/50%
                 if only two champions/cards remain following count chances are used 1/2 of: 33%/67% 
@@ -139,6 +150,7 @@ def run_discord_bot() -> None:
                 this default deckroll can be indivualized with the following modifications (combine them as you want,
                 but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
+                - eternal for eternal format
                 - lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
@@ -165,14 +177,27 @@ def run_discord_bot() -> None:
             # DECKROLL
             elif message_content.startswith("!deckroll"):
                 # init values with default values
+                format = format_default
                 language = language_default
                 amount_regions = amount_regions_default
                 amount_cards = amount_cards_default
                 amount_champions = amount_champions_default
                 regions_and_weights = deepcopy(regions_and_weights_default)
-                cards_and_weights = deepcopy(cards_and_weights_default)
                 count_chances = deepcopy(count_chances_default)
                 count_chances_two_remaining_deck_slots = deepcopy(count_chances_two_remaining_deck_slots_default)
+                
+                # format
+                format_regex = r".*eternal.*"
+                format_regex_match = re.match(format_regex, message_content)
+                if bool(format_regex_match):
+                    format = "eternal"
+
+                if format == "standard":
+                    card_pool = card_pool_standard
+                    cards_and_weights = deepcopy(cards_and_weights_standard_default)
+                else:
+                    card_pool = card_pool_eternal
+                    cards_and_weights = deepcopy(cards_and_weights_eternal_default)
 
                 # language
                 language_regex = r".*lang=([a-z]{2}).*"
@@ -324,6 +349,7 @@ def run_discord_bot() -> None:
                 the default cardroll (!cardroll) can be indivualized with the following modifications
                 (combine them as you want, but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
+                - eternal for eternal format
                 - lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
@@ -350,9 +376,22 @@ def run_discord_bot() -> None:
             # CARDROLLL
             elif message_content.startswith("!cardroll"):
                 # init values with default values
+                format = "standard"
                 language = language_default
                 regions_and_weights = deepcopy(regions_and_weights_default)
-                cards_and_weights = deepcopy(cards_and_weights_default)
+
+                # format
+                format_regex = r".*eternal.*"
+                format_regex_match = re.match(format_regex, message_content)
+                if bool(format_regex_match):
+                    format = "eternal"
+
+                if format == "standard":
+                    card_pool = card_pool_standard
+                    cards_and_weights = deepcopy(cards_and_weights_standard_default)
+                else:
+                    card_pool = card_pool_eternal
+                    cards_and_weights = deepcopy(cards_and_weights_eternal_default)
 
                 # language
                 language_regex = r".*lang=([a-z]{2}).*"
