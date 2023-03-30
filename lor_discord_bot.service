@@ -1,0 +1,10 @@
+[Unit]
+Description=LoR Discord Bot Service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=sh /home/ubuntu/Legends-of-Runeterra-deckroll/start_discord_bot.sh
+
+[Install]
+WantedBy=multi-user.target
