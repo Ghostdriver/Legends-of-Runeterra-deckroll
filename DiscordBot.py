@@ -1,7 +1,7 @@
 from typing import  Dict, Literal
 from CardData import ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
-from Deckroll import Deckroll
+from Deckroll import Deckroll, DECKROLL_ATTEMPTS
 import discord
 from copy import deepcopy
 import re
@@ -303,9 +303,9 @@ class DiscordBot(discord.Client):
                 try:
                     deckcode = deck_roll.roll_deck()
                 except RetryError as e:
-                    await message.channel.send("Even after 10 rolls no valid deck could be rolled for the given settings")
-                    raise RetryError("Even after 10 rolls no valid deck could be rolled for the given settings")
-                # print(f"{message.author.name}: {message_content} --> {deckcode}")
+                    await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                    raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                logger.info(f"the deckroll gave: {deckcode}")
 
                 await message.channel.send(deckcode)
 
@@ -424,10 +424,10 @@ class DiscordBot(discord.Client):
                                 cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
 
                 random_card_code = random.choices(list(cards_and_weights.keys()), weights=list(cards_and_weights.values()))[0]
-                # print(f"{message.author.name}: {message_content} --> {deckcode}")
 
                 card = card_pool.get_card_by_card_code(card_code=random_card_code, language=language)
                 random_card_name = card.name
+                logger.info(f"the cardroll gave: {random_card_name}")
                 
                 embed, file = assemble_card_image(card_pool=card_pool, card_name=random_card_name, language=language)
 

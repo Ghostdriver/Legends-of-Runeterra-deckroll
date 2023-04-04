@@ -8,6 +8,8 @@ import xlsxwriter
 import os
 from tenacity import retry, stop_after_attempt
 
+DECKROLL_ATTEMPTS = 10
+
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[str, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
         self.card_pool = card_pool
@@ -44,7 +46,7 @@ class Deckroll:
             f"Created Excel {workbook_name} with {amount_decks} rolled decks in {needed_time}"
         )
 
-    @retry(stop=stop_after_attempt(10))
+    @retry(stop=stop_after_attempt(DECKROLL_ATTEMPTS))
     def roll_deck(self) -> str:
         # init Deck
         self.deck = Deck(card_pool=self.card_pool)
