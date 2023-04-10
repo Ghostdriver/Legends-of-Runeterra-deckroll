@@ -42,6 +42,12 @@ count_chances_two_remaining_deck_slots_default: Dict[int, int] = {
     1: 33,
     2: 67
 }
+# ADDITIONAL DEFAULT VALUES FOR DRAFTING
+region_offers_per_pick_default: int = 3
+regions_to_choose_per_pick_default: int = 1
+card_offers_per_pick_default: int = 3
+cards_to_choose_per_pick_default: int = 1
+draft_champions_first_default: bool = False
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
 format: Literal["standard", "eternal"] = "standard"
@@ -65,4 +71,4 @@ if __name__ == "__main__":
         deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
         deck_roll.roll_deck_spreadsheat(amount_decks=AMOUNT_DECKS, decklink_prefix=DECKROLL_DECK_PREFIX)
     if START_DISCORD_BOT:
-        discord_bot = DiscordBot(screenshot_prefix=SCREENSHOT_PREFIX, decklink_prefix=DECKLINK_PREFIX, deckroll_deck_prefix=DECKLINK_PREFIX, card_pool_standard=card_pool_standard, card_pool_eternal=card_pool_eternal, format_default=format_default, language_default=language_default, amount_regions_default=amount_regions_default, amount_cards_default=amount_cards_default, amount_champions_default=amount_champions_default, regions_and_weights_default=regions_and_weights_default, cards_and_weights_standard_default=cards_and_weights_standard_default, cards_and_weights_eternal_default=cards_and_weights_eternal_default, count_chances_default=count_chances_default, count_chances_two_remaining_deck_slots_default=count_chances_two_remaining_deck_slots_default)
+        discord_bot = DiscordBot(screenshot_prefix=SCREENSHOT_PREFIX, decklink_prefix=DECKLINK_PREFIX, deckroll_deck_prefix=DECKLINK_PREFIX, card_pool_standard=card_pool_standard, card_pool_eternal=card_pool_eternal, format_default=format_default, language_default=language_default, amount_regions_default=amount_regions_default, amount_cards_default=amount_cards_default, amount_champions_default=amount_champions_default, regions_and_weights_default=regions_and_weights_default, cards_and_weights_standard_default=cards_and_weights_standard_default, cards_and_weights_eternal_default=cards_and_weights_eternal_default, count_chances_default=count_chances_default, count_chances_two_remaining_deck_slots_default=count_chances_two_remaining_deck_slots_default, region_offers_per_pick_default=region_offers_per_pick_default, regions_to_choose_per_pick_default=regions_to_choose_per_pick_default, card_offers_per_pick_default=card_offers_per_pick_default, cards_to_choose_per_pick_default=cards_to_choose_per_pick_default, draft_champions_first_default=draft_champions_first_default)

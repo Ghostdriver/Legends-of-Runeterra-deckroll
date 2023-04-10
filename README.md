@@ -2,7 +2,7 @@
 # Script + Discord Bot
 
 # Discord Bot Invite Link
-https://discord.com/api/oauth2/authorize?client_id=1074070984124014632&permissions=3072&scope=bot
+https://discord.com/api/oauth2/authorize?client_id=1074070984124014632&permissions=11328&scope=bot
 
 # execute main
 poetry run Python ./main.py
