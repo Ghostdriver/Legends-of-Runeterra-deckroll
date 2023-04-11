@@ -23,7 +23,7 @@ REACTIONS_NUMBERS = {
 NUMBERS_REACTIONS = { value: key for key, value in REACTIONS_NUMBERS.items() }
 
 class Draft:
-    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, cards_and_weights: Dict[str, int], max_amount_champions: int, draft_champions_first: bool) -> None:
+    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[str, int], max_amount_champions: int, draft_champions_first: bool) -> None:
         self.draft_init_message_content = draft_init_message_content
         self.draft_message = draft_message
         self.discord_bot_user = discord_bot_user
@@ -35,9 +35,14 @@ class Draft:
         self.regions_to_choose_per_pick = regions_to_choose_per_pick
         self.regions_and_weights = regions_and_weights
         self.card_offers_per_pick = card_offers_per_pick
+        self.champion_offers_per_pick = card_offers_per_pick
+        self.non_champion_offers_per_pick = card_offers_per_pick
         self.cards_to_choose_per_pick = cards_to_choose_per_pick
         self.champions_to_choose_per_pick = cards_to_choose_per_pick
         self.non_champions_to_choose_per_pick = cards_to_choose_per_pick
+        self.card_bucket_size = card_bucket_size
+        self.champion_bucket_size = card_bucket_size
+        self.non_champion_bucket_size = card_bucket_size
         self.cards_and_weights = cards_and_weights
         # Used for the region rolls
         self.cards_and_weights_runeterra_champions: Dict[str, int] = {}
@@ -51,9 +56,9 @@ class Draft:
         self.drafted_deck = Deck(card_pool=self.card_pool)
         self.drafted_deck.max_cards = amount_cards
         self.drafted_deck.max_champions = max_amount_champions
-        self.current_choices: List[str] = []
+        self.current_choices: List[str] | List[List[str]] = []
         self.current_reactions: List[discord.Reaction] = []
-        self.status: Literal["Init", "Picking Regions", "Picking Champions", "Picking Non-Champions", "Picking Champions and Non Champions together", "Draft Completed"] = "Init"
+        self.status: Literal["Init", "Picking Regions", "Picking Champions", "Picking Non-Champions", "Picking Champions and Non Champions together", "Draft Completed", "!!! Draft abandoned !!!"] = "Init"
         self.user_task: str = ""
         self.deck_embed: discord.Embed = None
         self.maximum_offers = max(region_offers_per_pick, card_offers_per_pick)
@@ -76,7 +81,9 @@ Picked Regions: {self.picked_regions}
         await self.draft_message.edit(content=message, embed=self.deck_embed)
 
     async def abandon(self) -> None:
-        await self.draft_message.edit(content="Draft abandoned!", embed=self.deck_embed)
+        self.status = "!!! Draft abandoned !!!"
+        await self.update_draft_message()
+        await self._remove_user_reactions()
         await self._remove_own_reactions()
 
     async def start_draft(self) -> None:
@@ -159,7 +166,7 @@ Picked Regions: {self.picked_regions}
             if picked_region in ALL_REGIONS:
                 self.regions_and_weights[picked_region] = 0
             else:
-                runeterra_champion = self.card_pool.get_card_by_card_name(picked_region)
+                runeterra_champion = self.card_pool.get_collectible_card_by_card_name(picked_region)
                 self.drafted_deck.add_card_and_count(runeterra_champion.card_code, 1)
                 self.cards_and_weights_runeterra_champions[picked_region] = 0
                 await self._update_deck_embed()
@@ -168,17 +175,19 @@ Picked Regions: {self.picked_regions}
         for region in self.picked_regions:
             if region in ALL_REGIONS:
                 for champion in self.card_pool.non_runeterra_champions:
-                    if region in champion.region_refs:
+                    if region in champion.region_refs and self.cards_and_weights[champion.card_code] > 0:
                         self.cards_and_weights_champions[champion.name] = self.cards_and_weights[champion.card_code]
                 for non_champion in self.card_pool.all_non_champions:
-                    if region in non_champion.region_refs:
+                    if region in non_champion.region_refs and self.cards_and_weights[non_champion.card_code] > 0:
                         self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[champion.card_code]
 
             else:
-                runeterra_champion = self.card_pool.get_card_by_card_name(region)
-                self.cards_and_weights_champions[runeterra_champion.name] = self.cards_and_weights[runeterra_champion.card_code]
+                runeterra_champion = self.card_pool.get_collectible_card_by_card_name(region)
+                if self.cards_and_weights[runeterra_champion.card_code] > 0:
+                    self.cards_and_weights_champions[runeterra_champion.name] = self.cards_and_weights[runeterra_champion.card_code]
                 for non_champion in self.card_pool.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT[runeterra_champion.name]:
-                    self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[non_champion.card_code]
+                    if self.cards_and_weights[non_champion.card_code] > 0:
+                        self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[non_champion.card_code]
 
         for card_name, weight in self.cards_and_weights_champions.items():
             self.cards_and_weights_champions_and_non_champions_combined[card_name] = weight
@@ -186,62 +195,143 @@ Picked Regions: {self.picked_regions}
             self.cards_and_weights_champions_and_non_champions_combined[card_name] = weight
 
     async def _roll_champion_choices(self) -> None:
+        amount_of_draftable_champions = len(list(self.cards_and_weights_champions.keys()))
+        # for single cards
         if self.drafted_deck.remaining_champions < self.champions_to_choose_per_pick:
             self.champions_to_choose_per_pick = self.drafted_deck.remaining_champions
+        if amount_of_draftable_champions < self.champion_offers_per_pick:
+            self.champion_offers_per_pick = amount_of_draftable_champions
+        # for card buckets
+        if self.drafted_deck.remaining_champions < self.champion_bucket_size:
+            self.champion_bucket_size = self.drafted_deck.remaining_champions
+        if amount_of_draftable_champions < self.champion_bucket_size:
+            self.champion_bucket_size = amount_of_draftable_champions
+            self.champion_offers_per_pick = 1
         # Weights for numpy choice have to be equal to one
         total_weight = sum(self.cards_and_weights_champions.values())
         for key, value in self.cards_and_weights_champions.items():
             self.cards_and_weights_champions[key] = value / total_weight
-        self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions.values()))
-        self.user_task = f"Pick {self.champions_to_choose_per_pick} Champion(s) by reacting"
+        # for single cards
+        if self.champion_bucket_size == 1:
+            self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions.keys()), size=self.champion_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions.values()))
+        # for card buckets
+        else:
+            self.current_choices = []
+            for champion_offer_per_pick in range(self.champion_offers_per_pick):
+                for _ in range(10):
+                    choice = sorted(np.random.choice(a=list(self.cards_and_weights_champions.keys()), size=self.champion_bucket_size, replace=False, p=list(self.cards_and_weights_champions.values())))
+                    if choice not in self.current_choices:
+                        self.current_choices.append(choice)
+                        break
+        self.user_task = f"Pick {self.champions_to_choose_per_pick} Champion Bucket(s) by reacting"
 
     async def _roll_non_champion_choices(self) -> None:
+        amount_of_draftable_non_champions = len(list(self.cards_and_weights_non_champions.keys()))
+        # for single cards
         if self.drafted_deck.remaining_cards < self.non_champions_to_choose_per_pick:
             self.non_champions_to_choose_per_pick = self.drafted_deck.remaining_cards
+        if amount_of_draftable_non_champions < self.non_champion_offers_per_pick:
+            self.non_champion_offers_per_pick = amount_of_draftable_non_champions
+        # for card buckets
+        if self.drafted_deck.remaining_cards < self.non_champion_bucket_size:
+            self.non_champion_bucket_size = self.drafted_deck.remaining_cards
+        if amount_of_draftable_non_champions < self.non_champion_bucket_size:
+            self.non_champion_bucket_size = amount_of_draftable_non_champions
+            self.non_champion_offers_per_pick = 1
         # Weights for numpy choice have to be equal to one
         total_weight = sum(self.cards_and_weights_non_champions.values())
         for key, value in self.cards_and_weights_non_champions.items():
             self.cards_and_weights_non_champions[key] = value / total_weight
-        self.current_choices = np.random.choice(a=list(self.cards_and_weights_non_champions.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_non_champions.values()))
-        self.user_task = f"Pick {self.non_champions_to_choose_per_pick} Non-Champion(s) by reacting"
+        # for single cards
+        if self.non_champion_bucket_size == 1:
+            self.current_choices = np.random.choice(a=list(self.cards_and_weights_non_champions.keys()), size=self.non_champion_offers_per_pick, replace=False, p=list(self.cards_and_weights_non_champions.values()))
+        # for card buckets
+        else:
+            self.current_choices = []
+            for non_champion_offer_per_pick in range(self.non_champion_offers_per_pick):
+                for _ in range(10):
+                    choice = sorted(np.random.choice(a=list(self.cards_and_weights_non_champions.keys()), size=self.non_champion_bucket_size, replace=False, p=list(self.cards_and_weights_non_champions.values())))
+                    if choice not in self.current_choices:
+                        self.current_choices.append(choice)
+                        break
+        self.user_task = f"Pick {self.non_champions_to_choose_per_pick} Non-Champion Bucket(s) by reacting"
 
     async def _roll_champion_and_non_champion_choices_together(self) -> None:
+        amount_of_draftable_cards = len(list(self.cards_and_weights_champions_and_non_champions_combined.keys()))
+        # for single cards
         if self.drafted_deck.remaining_cards < self.cards_to_choose_per_pick:
             self.cards_to_choose_per_pick = self.drafted_deck.remaining_cards
+        if amount_of_draftable_cards < self.card_offers_per_pick:
+            self.card_offers_per_pick = amount_of_draftable_cards
+        # for card buckets
+        if self.drafted_deck.remaining_cards < self.card_bucket_size:
+            self.card_bucket_size = self.drafted_deck.remaining_cards
+        if amount_of_draftable_cards < self.card_bucket_size:
+            self.card_bucket_size = amount_of_draftable_cards
+            self.card_offers_per_pick = 1
         # Weights for numpy choice have to be equal to one
         total_weight = sum(self.cards_and_weights_champions_and_non_champions_combined.values())
         for key, value in self.cards_and_weights_champions_and_non_champions_combined.items():
             self.cards_and_weights_champions_and_non_champions_combined[key] = value / total_weight
-        if self.drafted_deck.remaining_champions > self.cards_to_choose_per_pick:
-            self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions_and_non_champions_combined.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions_and_non_champions_combined.values()))
-        # Prevent the possibility to add more champions than intended
-        else:
-            for _ in range(1000):
+        # for single cards
+        if self.non_champion_bucket_size == 1:
+            if self.drafted_deck.remaining_champions > self.cards_to_choose_per_pick:
                 self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions_and_non_champions_combined.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions_and_non_champions_combined.values()))
-                amount_rolled_champions = 0
-                for card_name in self.current_choices:
-                    card = self.card_pool.get_card_by_card_name(card_name)
-                    if card.is_champion:
-                        amount_rolled_champions += 1
-                if amount_rolled_champions <= self.drafted_deck.remaining_champions:
-                    break
-        self.user_task = f"Pick {self.non_champions_to_choose_per_pick} Card(s) by reacting"
+            # Prevent the possibility to add more champions than intended
+            else:
+                for _ in range(10):
+                    self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions_and_non_champions_combined.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions_and_non_champions_combined.values()))
+                    amount_rolled_champions = await self._get_amount_rolled_champions(self.current_choices)
+                    if amount_rolled_champions <= self.drafted_deck.remaining_champions:
+                        break
+        # for card buckets
+        else:
+            self.current_choices = []
+            for card_offer_per_pick in range(self.card_offers_per_pick):
+                for _ in range(10):
+                    choice = sorted(np.random.choice(a=list(self.cards_and_weights_champions_and_non_champions_combined.keys()), size=self.card_bucket_size, replace=False, p=list(self.cards_and_weights_champions_and_non_champions_combined.values())))
+                    amount_rolled_champions = await self._get_amount_rolled_champions(choice)
+                    if choice not in self.current_choices and amount_rolled_champions <= self.drafted_deck.remaining_champions:
+                        self.current_choices.append(choice)
+                        break
+        self.user_task = f"Pick {self.cards_to_choose_per_pick} Card(s) by reacting"
+
+    async def _get_amount_rolled_champions(self, card_name_list: List[str]) -> int:
+        amount_rolled_champions = 0
+        for card_name in card_name_list:
+            card = self.card_pool.get_collectible_card_by_card_name(card_name)
+            if card.is_champion:
+                amount_rolled_champions += 1
+        return amount_rolled_champions
 
     async def _add_chosen_cards(self) -> None:
         for reaction in self.current_reactions:
-            picked_card_name = self.current_choices[REACTIONS_NUMBERS[reaction.emoji]]         
-            card = self.card_pool.get_card_by_card_name(picked_card_name)
-            self.drafted_deck.add_card_and_count(card.card_code, 1)
-            if self.drafted_deck.cards_and_counts[card.card_code] == 3:
-                self.cards_and_weights_champions[picked_card_name] = 0
+            picked_card_bucket = self.current_choices[REACTIONS_NUMBERS[reaction.emoji]]
+            # If the option is a card bucket
+            if isinstance(picked_card_bucket, list):
+                for card_name in picked_card_bucket:
+                    await self._add_chosen_card(card_name=card_name)
+            # If the option is a single card
+            else:
+                await self._add_chosen_card(card_name=picked_card_bucket)
         await self._update_deck_embed()
+
+    async def _add_chosen_card(self, card_name: str) -> None:
+        card = self.card_pool.get_collectible_card_by_card_name(card_name)
+        self.drafted_deck.add_card_and_count(card.card_code, 1)
+        if self.drafted_deck.cards_and_counts[card.card_code] == 3:
+            del self.cards_and_weights_champions_and_non_champions_combined[card_name]
+            if card.is_champion:
+                del self.cards_and_weights_champions[card_name]
+            else:
+                del self.cards_and_weights_non_champions[card_name]
 
     async def _finish_draft(self) -> None:
         self.user_task = ""
         self.current_choices = []
+        await self.update_draft_message()
         await self._remove_user_reactions()
         await self._remove_own_reactions()
-        await self.update_draft_message()
 
     async def _add_reactions(self) -> None:
         for number in range(self.maximum_offers):

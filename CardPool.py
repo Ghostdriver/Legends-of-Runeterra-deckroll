@@ -142,6 +142,17 @@ class CardPool:
         if language != DEFAULT_LOCALE:
             return self.get_card_by_card_name(card_name=card_name, language=DEFAULT_LOCALE)
         raise ValueError(f"No Card with card name {card_name} found")
+    
+    def get_collectible_card_by_card_name(self, card_name: str, language: str = "en_us") -> CardData:
+        for card in self.collectible_cards_with_localization[language]:
+            if card_name.lower() == card.name.lower():
+                return card
+        for card in self.collectible_cards_with_localization[language]:
+            if card_name.lower() in card.name.lower():
+                return card
+        if language != DEFAULT_LOCALE:
+            return self.get_collectible_card_by_card_name(card_name=card_name, language=DEFAULT_LOCALE)
+        raise ValueError(f"No Card with card name {card_name} found")
 
     def create_txt_file_with_card_names(self) -> None:
         '''Creates a text file with all card names from collectible cards, which can be used for scribbl for example'''

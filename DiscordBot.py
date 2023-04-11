@@ -28,7 +28,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(ch)
 
 class DiscordBot(discord.Client):
-    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[str, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, draft_champions_first_default: bool) -> None:
+    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[str, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, draft_champions_first_default: bool) -> None:
         # Prefixes
         self.screenshot_prefix = screenshot_prefix
         self.decklink_prefix = decklink_prefix
@@ -51,6 +51,7 @@ class DiscordBot(discord.Client):
         self.regions_to_choose_per_pick_default = regions_to_choose_per_pick_default
         self.card_offers_per_pick_default = card_offers_per_pick_default
         self.cards_to_choose_per_pick_default = cards_to_choose_per_pick_default
+        self.card_bucket_size_default = card_bucket_size_default
         self.draft_champions_first_default = draft_champions_first_default
         # Drafts
         self.drafts: Dict[int, Draft] = {}
@@ -280,11 +281,14 @@ class DiscordBot(discord.Client):
                 Using draft_champion_first makes it so, that the champions are drafted immediately after drafting the regions until the given amount is reached
                 (remark changing the card weights for champions without draft_champions_first enabled can be considered (use champion=x to do so))
 
-                region_offers_per_pick=x --> How many regions you want to get offered, while drafting the regions (has to be between 2 and 10)
-                regions_to_choose_per_pick=x --> How many of the offered regions have to be picked with every pick
+                region-offers-per-pick=x --> How many regions you want to get offered, while drafting the regions (has to be between 2 and 10)
+                regions-to-choose-per-pick=x --> How many of the offered regions have to be picked with every pick
 
-                card_offers_per_pick=x --> How many cards you want to get offered, while drafting the cards (has to be between 2 and 10)
-                cards_to_choose_per_pick=x --> How many of the offered cards have to be picked with every pick
+                card-offers-per-pick=x --> How many cards you want to get offered, while drafting the cards (has to be between 2 and 10)
+                cards-to-choose-per-pick=x --> How many of the offered cards have to be picked with every pick
+
+                card-bucket-size=x --> The deck is drafted from buckets with multiple cards (up to 5 for now)
+                (can't be used together with cards_to_choose_per_pick (atleast for now))
                 """
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
@@ -336,10 +340,11 @@ class DiscordBot(discord.Client):
                     regions_to_choose_per_pick = await self._get_regions_to_choose_per_pick(message_content=message_content, message=message, region_offers_per_pick=region_offers_per_pick)
                     card_offers_per_pick = await self._get_card_offers_per_pick(message_content=message_content, message=message)
                     cards_to_choose_per_pick = await self._get_cards_to_choose_per_pick(message_content=message_content, message=message, card_offers_per_pick=card_offers_per_pick)
+                    card_bucket_size = await self._get_card_bucket_size(message_content=message_content, message=message, cards_to_choose_per_pick=cards_to_choose_per_pick)
                     draft_champions_first = await self._get_draft_champions_first(message_content=message_content)
 
                     draft_message = await message.channel.send(content="Let's start drafting :)")
-                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, draft_champions_first=draft_champions_first)
+                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, card_bucket_size=card_bucket_size, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, draft_champions_first=draft_champions_first)
                     await self.drafts[draft_message.id].start_draft()
 
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
@@ -526,7 +531,7 @@ class DiscordBot(discord.Client):
     # DRAFTING MODIFICATIONS
     async def _get_region_offers_per_pick(self, message_content: str, message: discord.Message) -> int:
         region_offers_per_pick = self.region_offers_per_pick_default
-        region_offers_per_pick_regex = r".*region_offers_per_pick=(\d+).*"
+        region_offers_per_pick_regex = r".*region-offers-per-pick=(\d+).*"
         region_offers_per_pick_regex_match = re.match(region_offers_per_pick_regex, message_content)
         if bool(region_offers_per_pick_regex_match):
             region_offers_per_pick = int(region_offers_per_pick_regex_match.group(1))
@@ -538,7 +543,7 @@ class DiscordBot(discord.Client):
     
     async def _get_regions_to_choose_per_pick(self, message_content: str, message: discord.Message, region_offers_per_pick: int) -> int:
         regions_to_choose_per_pick = self.regions_to_choose_per_pick_default
-        regions_to_choose_per_pick_regex = r".*regions_to_choose_per_pick=(\d+).*"
+        regions_to_choose_per_pick_regex = r".*regions-to-choose-per-pick=(\d+).*"
         regions_to_choose_per_pick_regex_match = re.match(regions_to_choose_per_pick_regex, message_content)
         if bool(regions_to_choose_per_pick_regex_match):
             regions_to_choose_per_pick = int(regions_to_choose_per_pick_regex_match.group(1))
@@ -554,7 +559,7 @@ class DiscordBot(discord.Client):
     
     async def _get_card_offers_per_pick(self, message_content: str, message: discord.Message) -> int:
         card_offers_per_pick = self.card_offers_per_pick_default
-        card_offers_per_pick_regex = r".*card_offers_per_pick=(\d+).*"
+        card_offers_per_pick_regex = r".*card-offers-per-pick=(\d+).*"
         card_offers_per_pick_regex_match = re.match(card_offers_per_pick_regex, message_content)
         if bool(card_offers_per_pick_regex_match):
             card_offers_per_pick = int(card_offers_per_pick_regex_match.group(1))
@@ -566,7 +571,7 @@ class DiscordBot(discord.Client):
     
     async def _get_cards_to_choose_per_pick(self, message_content: str, message: discord.Message, card_offers_per_pick: int) -> int:
         cards_to_choose_per_pick = self.cards_to_choose_per_pick_default
-        cards_to_choose_per_pick_regex = r".*cards_to_choose_per_pick=(\d+).*"
+        cards_to_choose_per_pick_regex = r".*cards-to-choose-per-pick=(\d+).*"
         cards_to_choose_per_pick_regex_match = re.match(cards_to_choose_per_pick_regex, message_content)
         if bool(cards_to_choose_per_pick_regex_match):
             cards_to_choose_per_pick = int(cards_to_choose_per_pick_regex_match.group(1))
@@ -580,11 +585,26 @@ class DiscordBot(discord.Client):
                 raise ValueError(error)
         return cards_to_choose_per_pick
     
+    async def _get_card_bucket_size(self, message_content: str, message: discord.Message, cards_to_choose_per_pick: int) -> int:
+        card_bucket_size = self.card_bucket_size_default
+        card_bucket_size_regex = r".*card-bucket-size=(\d+).*"
+        card_bucket_size_regex_match = re.match(card_bucket_size_regex, message_content)
+        if bool(card_bucket_size_regex_match):
+            card_bucket_size = int(card_bucket_size_regex_match.group(1))
+            if card_bucket_size < 1 or card_bucket_size > 5:
+                error = f"detected a given card_bucket_size of {card_bucket_size}, but the card_bucket_size has to be between 1 and 5!"
+                await message.channel.send(error)
+                raise ValueError(error)
+            if card_bucket_size > 1 and cards_to_choose_per_pick > 1:
+                error = f"Only one of card_bucket_size and cards_to_choose_per_pick can be greater than 1"
+                await message.channel.send(error)
+                raise ValueError(error)
+        return card_bucket_size
+    
     async def _get_draft_champions_first(self, message_content: str) -> bool:
         draft_champions_first = self.draft_champions_first_default
-        draft_champions_first_regex = r".*draft_champions_first.*"
+        draft_champions_first_regex = r".*draft-champions-first.*"
         draft_champions_first_regex_match = re.match(draft_champions_first_regex, message_content)
         if bool(draft_champions_first_regex_match):
             draft_champions_first = True
         return draft_champions_first
-    
