@@ -278,8 +278,8 @@ class DiscordBot(discord.Client):
                 --> use "!deckroll help" to get more information
                 Additionally the following modifications are possible:
                 The champions are randomly in the pool with all the other cards, except when you include "draft_champions_first" in the command
-                Using draft_champion_first makes it so, that the champions are drafted immediately after drafting the regions until the given amount is reached
-                (remark changing the card weights for champions without draft_champions_first enabled can be considered (use champion=x to do so))
+                Using draft-champion-first makes it so, that the champions are drafted immediately after drafting the regions until the given amount is reached
+                (remark changing the card weights for champions without draft-champions-first enabled can be considered (use champion=x to do so))
 
                 region-offers-per-pick=x --> How many regions you want to get offered, while drafting the regions (has to be between 2 and 10)
                 regions-to-choose-per-pick=x --> How many of the offered regions have to be picked with every pick

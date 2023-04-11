@@ -71,6 +71,7 @@ class Draft:
         for index, current_choice in enumerate(self.current_choices):
             current_choices_message += f"{NUMBERS_REACTIONS[index]} {current_choice}\n"
         message = f"""
+{self.user.name}'s draft
 {self.draft_init_message_content}
 Picked Regions: {self.picked_regions}
 {self.status}
@@ -294,7 +295,7 @@ Picked Regions: {self.picked_regions}
                     if choice not in self.current_choices and amount_rolled_champions <= self.drafted_deck.remaining_champions:
                         self.current_choices.append(choice)
                         break
-        self.user_task = f"Pick {self.cards_to_choose_per_pick} Card(s) by reacting"
+        self.user_task = f"Pick {self.cards_to_choose_per_pick} Card Bucket(s) by reacting"
 
     async def _get_amount_rolled_champions(self, card_name_list: List[str]) -> int:
         amount_rolled_champions = 0
