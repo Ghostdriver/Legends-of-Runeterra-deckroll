@@ -96,7 +96,7 @@ Picked Regions: {self.picked_regions}
                         self.status = "Picking Champions"
                     else:
                         self.status = "Picking Champions and Non Champions together"
-                    await self._prepare_next_choices()
+                await self._prepare_next_choices()
         elif self.status == "Picking Champions":
             if len(self.current_reactions) == self.champions_to_choose_per_pick:
                 await self._add_chosen_cards()
