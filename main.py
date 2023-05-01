@@ -16,6 +16,7 @@ START_DISCORD_BOT: bool = True
 # INIT CARD_POOLS
 card_pool_standard = CardPool(format="client_Formats_Standard_name")
 card_pool_eternal = CardPool(format="client_Formats_Eternal_name")
+#card_pool_eternal.create_txt_file_with_card_names()
 
 # INIT DEFAULT VALUES FOR DECKROLL
 format_default = "standard"

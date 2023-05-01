@@ -74,6 +74,7 @@ class Draft:
 {self.user.name}'s draft
 {self.draft_init_message_content}
 Picked Regions: {self.picked_regions}
+Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
 {self.status}
 {self.user_task}
 
