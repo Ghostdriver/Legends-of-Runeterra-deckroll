@@ -2,7 +2,7 @@
 name = "legends of runeterra deckroll"
 version = "1.0.0"
 description = ""
-authors = ["Ghostdriver <mattes.hupp@t-online.de>"]
+authors = ["Ghostdriver"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
