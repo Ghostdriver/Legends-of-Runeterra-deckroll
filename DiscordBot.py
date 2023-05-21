@@ -23,9 +23,13 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 
+fh = logging.FileHandler("debug.log")
+fh.setLevel(logging.DEBUG)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(ch)
+logger.addHandler(fh)
 
 class DiscordBot(discord.Client):
     def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[str, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, draft_champions_first_default: bool) -> None:
@@ -71,7 +75,7 @@ class DiscordBot(discord.Client):
     async def on_message(self, message: discord.Message):
         if isinstance(message.content, str):
             message_content: str = message.content.lower()
-            if message_content.startswith("!deck ") or message_content.startswith("!deckroll") or message_content.startswith("!card ") or message_content.startswith("!cardroll"):
+            if message_content.startswith("!deck ") or message_content.startswith("!deckroll") or message_content.startswith("!card ") or message_content.startswith("!cardroll") or message_content.startswith("!draft"):
                 logger.info(f"Message from {message.author}: {message_content}")
 
             # DISPLAY DECK
@@ -551,8 +555,8 @@ class DiscordBot(discord.Client):
                 error = f"detected a given amount of region_offers_per_pick of {regions_to_choose_per_pick}, but the amount of regions_to_choose_per_pick has to be between 1 and 9!"
                 await message.channel.send(error)
                 raise ValueError(error)
-            if regions_to_choose_per_pick >= region_offers_per_pick:
-                error = f"detected a given amount of region_offers_per_pick of {regions_to_choose_per_pick} and a given amount of region_offers_per_pick of {region_offers_per_pick}, but the amount of regions_to_choose_per_pick has to be smaller than the amount of region_offers_per_pick"
+            if regions_to_choose_per_pick > region_offers_per_pick:
+                error = f"detected a given amount of region_offers_per_pick of {regions_to_choose_per_pick} and a given amount of region_offers_per_pick of {region_offers_per_pick}, but the amount of regions_to_choose_per_pick has to be smaller or equal to the amount of region_offers_per_pick"
                 await message.channel.send(error)
                 raise ValueError(error)
         return regions_to_choose_per_pick
