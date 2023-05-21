@@ -25,6 +25,7 @@ ch.setFormatter(formatter)
 
 fh = logging.FileHandler("debug.log")
 fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

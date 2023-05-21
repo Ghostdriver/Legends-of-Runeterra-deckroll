@@ -276,7 +276,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
         for key, value in self.cards_and_weights_champions_and_non_champions_combined.items():
             self.cards_and_weights_champions_and_non_champions_combined[key] = value / total_weight
         # for single cards
-        if self.non_champion_bucket_size == 1:
+        if self.card_bucket_size == 1:
             if self.drafted_deck.remaining_champions > self.cards_to_choose_per_pick:
                 self.current_choices = np.random.choice(a=list(self.cards_and_weights_champions_and_non_champions_combined.keys()), size=self.card_offers_per_pick, replace=False, p=list(self.cards_and_weights_champions_and_non_champions_combined.values()))
             # Prevent the possibility to add more champions than intended
