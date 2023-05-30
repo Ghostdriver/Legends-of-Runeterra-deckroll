@@ -540,8 +540,8 @@ class DiscordBot(discord.Client):
         region_offers_per_pick_regex_match = re.match(region_offers_per_pick_regex, message_content)
         if bool(region_offers_per_pick_regex_match):
             region_offers_per_pick = int(region_offers_per_pick_regex_match.group(1))
-            if region_offers_per_pick < 2 or region_offers_per_pick > 10:
-                error = f"detected a given amount of region_offers_per_pick of {region_offers_per_pick}, but the amount of region_offers_per_pick has to be between 2 and 10!"
+            if region_offers_per_pick < 1 or region_offers_per_pick > 10:
+                error = f"detected a given amount of region_offers_per_pick of {region_offers_per_pick}, but the amount of region_offers_per_pick has to be between 1 and 10!"
                 await message.channel.send(error)
                 raise ValueError(error)
         return region_offers_per_pick
@@ -552,8 +552,8 @@ class DiscordBot(discord.Client):
         regions_to_choose_per_pick_regex_match = re.match(regions_to_choose_per_pick_regex, message_content)
         if bool(regions_to_choose_per_pick_regex_match):
             regions_to_choose_per_pick = int(regions_to_choose_per_pick_regex_match.group(1))
-            if regions_to_choose_per_pick < 1 or regions_to_choose_per_pick > 9:
-                error = f"detected a given amount of region_offers_per_pick of {regions_to_choose_per_pick}, but the amount of regions_to_choose_per_pick has to be between 1 and 9!"
+            if regions_to_choose_per_pick < 1 or regions_to_choose_per_pick > 10:
+                error = f"detected a given amount of region_offers_per_pick of {regions_to_choose_per_pick}, but the amount of regions_to_choose_per_pick has to be between 1 and 10!"
                 await message.channel.send(error)
                 raise ValueError(error)
             if regions_to_choose_per_pick > region_offers_per_pick:
