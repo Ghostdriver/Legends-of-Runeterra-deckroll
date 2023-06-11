@@ -4,6 +4,7 @@ from CardPool import CardPool
 from Deckroll import Deckroll
 from DiscordBot import DiscordBot
 from copy import deepcopy
+import random
 
 # CARD_SETS in CardData needs to be updated
 SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
@@ -60,8 +61,12 @@ else:
     card_pool = card_pool_eternal
     cards_and_weights = deepcopy(cards_and_weights_eternal_default)
 amount_regions = amount_regions_default
-amount_cards = amount_cards_default
-amount_champions = amount_champions_default
+min_amount_cards = amount_cards_default
+max_amount_cards = amount_cards_default
+amount_cards = random.randint(min_amount_cards, max_amount_cards)
+min_amount_champions = amount_champions_default
+max_amount_champions = amount_champions_default
+amount_champions = random.randint(min_amount_champions, max_amount_champions)
 regions_and_weights = deepcopy(regions_and_weights_default)
 count_chances = deepcopy(count_chances_default)
 count_chances_two_remaining_deck_slots = deepcopy(count_chances_two_remaining_deck_slots_default)

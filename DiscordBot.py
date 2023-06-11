@@ -413,30 +413,40 @@ class DiscordBot(discord.Client):
     
     async def _get_amount_cards(self, message_content: str, message: discord.Message) -> int:
         amount_cards = self.amount_cards_default
-        amount_cards_regex = r".*cards=(\d+).*"
+        amount_cards_regex = r".*cards=(\d+)(\-(\d+))?.*"
         amount_cards_regex_match = re.match(amount_cards_regex, message_content)
         if bool(amount_cards_regex_match):
-            amount_cards = int(amount_cards_regex_match.group(1))
-            if amount_cards < 1:
-                error = f"detected a given amount of cards of {amount_cards}, but the amount of cards can not be less than 1!"
+            min_amount_cards = int(amount_cards_regex_match.group(1))
+            max_amount_cards = int(amount_cards_regex_match.group(3)) if amount_cards_regex_match.group(3) else int(amount_cards_regex_match.group(1))
+            if max_amount_cards < min_amount_cards:
+                error = f"the maximum amount cards can't be smaller than the minimum amount of cards!"
                 await message.channel.send(error)
                 raise ValueError(error)
-            if amount_cards > MAX_CARDS:
-                error = f"detected a given amount of cards of {amount_cards}, but the amount of cards can not be greater than {MAX_CARDS}!"
+            if min_amount_cards < 1:
+                error = f"detected a given amount of cards of {min_amount_cards}, but the amount of cards can not be less than 1!"
                 await message.channel.send(error)
                 raise ValueError(error)
+            if max_amount_cards > MAX_CARDS:
+                error = f"detected a given amount of cards of {max_amount_cards}, but the amount of cards can not be greater than {MAX_CARDS}!"
+                await message.channel.send(error)
+                raise ValueError(error)
+            amount_cards = random.randint(min_amount_cards, max_amount_cards)
         return amount_cards
     
     async def _get_amount_champions(self, message_content: str, message: discord.Message, amount_cards: int) -> int:
         amount_champions = self.amount_champions_default
-        amount_champions_regex = r".*champions=(\d+).*"
+        amount_champions_regex = r".*champions=(\d+)(\-(\d+))?.*"
         amount_champions_regex_match = re.match(amount_champions_regex, message_content)
         if bool(amount_champions_regex_match):
-            amount_champions = int(amount_champions_regex_match.group(1))
-            if amount_champions > amount_cards:
-                error = f"The amount of champions must be lower than the total amount of cards - detected given input of {amount_cards} total cards and {amount_champions} champions."
+            min_amount_champions = int(amount_champions_regex_match.group(1))
+            max_amount_champions = int(amount_champions_regex_match.group(3)) if amount_champions_regex_match.group(3) else int(amount_champions_regex_match.group(1))
+            if max_amount_champions < min_amount_champions:
+                error = f"the maximum amount champions can't be smaller than the minimum amount of champions!"
                 await message.channel.send(error)
-                raise ValueError(error)
+                raise ValueError(error)        
+            amount_champions = random.randint(min_amount_champions, max_amount_champions)
+            if amount_champions > amount_cards:
+                amount_champions = amount_cards
         return amount_champions
     
     async def _get_count_chances(self, message_content: str, message: discord.Message) -> Dict[int, int]:
