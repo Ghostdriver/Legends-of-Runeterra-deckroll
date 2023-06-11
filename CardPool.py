@@ -3,8 +3,26 @@ from CardData import CardData, CARD_SETS, LANGUAGES
 import requests
 import json
 import string
+import logging
 
 DEFAULT_LOCALE = "en_us"
+
+# Formatter, Stream Handler, Logger
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+
+fh = logging.FileHandler("debug.log")
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(ch)
+logger.addHandler(fh)
+
 
 class CardPool:
     def __init__(self, format: Literal["client_Formats_Eternal_name", "client_Formats_Standard_name"] = "client_Formats_Standard_name") -> None:
@@ -52,7 +70,7 @@ class CardPool:
                 else:
                     raise ConnectionError(f"Getting card set for {card_set} failed - Status Code: {r.status_code}")
             
-            print(f"CardPool for locale {language} initialized with {len(self.all_cards_with_localization[language])} total cards")
+            logger.debug(f"CardPool for locale {language} initialized with {len(self.all_cards_with_localization[language])} total cards")
 
         # divide all cards in all languages into collectible and uncollectible cards
         for language, cards in self.all_cards_with_localization.items():
@@ -76,36 +94,36 @@ class CardPool:
                     self.all_non_champions.append(card)
             else:
                 self.uncollectible_cards.append(card)
-        print(f"CardPool initialized with {len(self.collectible_cards)} collectible cards")
-        print(f"CardPool initialized with {len(self.uncollectible_cards)} uncollectible cards")
-        print(f"CardPool initialized with {len(self.all_champions)} champion cards")
-        print(f"CardPool initialized with {len(self.runeterra_champions)} runeterra champion cards")
-        print(f"CardPool initialized with {len(self.non_runeterra_champions)} non runeterra champion cards")
-        print(f"CardPool initialized with {len(self.all_non_champions)} non champion cards")
+        logger.debug(f"CardPool initialized with {len(self.collectible_cards)} collectible cards")
+        logger.debug(f"CardPool initialized with {len(self.uncollectible_cards)} uncollectible cards")
+        logger.debug(f"CardPool initialized with {len(self.all_champions)} champion cards")
+        logger.debug(f"CardPool initialized with {len(self.runeterra_champions)} runeterra champion cards")
+        logger.debug(f"CardPool initialized with {len(self.non_runeterra_champions)} non runeterra champion cards")
+        logger.debug(f"CardPool initialized with {len(self.all_non_champions)} non champion cards")
 
         # get followers of runeterra champions
         # Aatrox
         for non_champion in self.all_non_champions:
             if "DARKIN" in non_champion.subtypes:
                 self.aatrox_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.aatrox_followers)} Cards for Aatrox")
+        logger.debug(f"CardPool initialized with {len(self.aatrox_followers)} Cards for Aatrox")
         # Bard
         for non_champion in self.all_non_champions:
             # "06RU001T3" is the Chime Card
             CHIME_CARD_CARD_CODE = "06RU001T3"
             if CHIME_CARD_CARD_CODE in non_champion.associated_card_refs:
                 self.bard_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.bard_followers)} Cards for Bard")
+        logger.debug(f"CardPool initialized with {len(self.bard_followers)} Cards for Bard")
         # Evelynn
         for non_champion in self.all_non_champions:
             if "Husk" in non_champion.description_raw:
                 self.evelynn_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.evelynn_followers)} Cards for Evelynn")
+        logger.debug(f"CardPool initialized with {len(self.evelynn_followers)} Cards for Evelynn")
         # Jax
         for non_champion in self.all_non_champions:
             if "WEAPONMASTER" in non_champion.subtypes:
                 self.jax_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.jax_followers)} Cards for Jax")
+        logger.debug(f"CardPool initialized with {len(self.jax_followers)} Cards for Jax")
         # Jhin
         for non_champion in self.all_non_champions:
             for associated_card in non_champion.associated_card_refs:
@@ -114,17 +132,17 @@ class CardPool:
                         if "Skill" in uncollectible_card.keyword_refs:
                             self.jhin_followers.append(non_champion)
                             break
-        print(f"CardPool initialized with {len(self.jhin_followers)} Cards for Jhin")
+        logger.debug(f"CardPool initialized with {len(self.jhin_followers)} Cards for Jhin")
         # Kayn and Varus
         for non_champion in self.all_non_champions:
             if "CULTIST" in non_champion.subtypes:
                 self.kayn_and_varus_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.kayn_and_varus_followers)} Cards for Kayn and Varus")
+        logger.debug(f"CardPool initialized with {len(self.kayn_and_varus_followers)} Cards for Kayn and Varus")
         # Ryze
         for non_champion in self.all_non_champions:
             if non_champion.name in RYZE_FOLLOWER_NAMES:
                 self.ryze_followers.append(non_champion)
-        print(f"CardPool initialized with {len(self.ryze_followers)} Cards for Ryze")
+        logger.debug(f"CardPool initialized with {len(self.ryze_followers)} Cards for Ryze")
 
     def get_card_by_card_code(self, card_code: str, language: str = "en_us") -> CardData:
         for card in self.all_cards_with_localization[language]:

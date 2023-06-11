@@ -58,7 +58,7 @@ class Draft:
         self.drafted_deck.max_champions = max_amount_champions
         self.current_choices: List[str] | List[List[str]] = []
         self.current_reactions: List[discord.Reaction] = []
-        self.status: Literal["Init", "Picking Regions", "Picking Champions", "Picking Non-Champions", "Picking Champions and Non Champions together", "Draft Completed", "!!! Draft abandoned !!!"] = "Init"
+        self.status: Literal["Init", "Picking Regions", "Picking Champions", "Picking Non-Champions", "Picking Champions and Non Champions together", "Draft Completed", "!!! Draft abandoned !!!", "!!! Error !!!"] = "Init"
         self.user_task: str = ""
         self.deck_embed: discord.Embed = None
         self.maximum_offers = max(region_offers_per_pick, card_offers_per_pick)
@@ -80,11 +80,34 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
 
 {current_choices_message}
         """
-        await self.draft_message.edit(content=message, embed=self.deck_embed)
+        try:
+            await self.draft_message.edit(content=message, embed=self.deck_embed)
+        except discord.errors.HTTPException as e:
+            DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
+            deck_url = f"{DECKLINK_PREFIX}{self.drafted_deck.deckcode}"
+            await self._remove_user_reactions()
+            await self._remove_own_reactions()
+            self.deck_embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+            self.status = "!!! Error !!!"
+            self.user_task = "The deck embed has exceeded the maximum size allowed in Discord!\nYou still have to abandon the draft to start a new one!"
+            message = f"""
+{self.user.name}'s draft
+{self.draft_init_message_content}
+Picked Regions: {self.picked_regions}
+Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
+{self.status}
+{self.user_task}
+
+{current_choices_message}
+        """
 
     async def abandon(self) -> None:
-        self.status = "!!! Draft abandoned !!!"
-        await self.update_draft_message()
+        if self.status != "!!! Error !!!":
+            self.status = "!!! Draft abandoned !!!"
+        try:
+            await self.update_draft_message()
+        except discord.errors.HTTPException as e:
+            print(e)
         await self._remove_user_reactions()
         await self._remove_own_reactions()
 

@@ -6,20 +6,20 @@ CARD_FORMAT_REFS = ["client_Formats_Eternal_name", "client_Formats_Standard_name
 RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]
 LANGUAGES = {
-    "de": "de_de",
+    #"de": "de_de",
     "en": "en_us",
-    "es": "es_es",
-    "mx": "es_mx",
-    "fr": "fr_fr",
-    "it": "it_it",
-    "ja": "ja_jp",
-    "ko": "ko_kr",
-    "pl": "pl_pl",
-    "pt": "pt_br",
-    "th": "th_th",
-    "tr": "tr_tr",
-    "ru": "ru_ru",
-    "zh": "zh_tw"
+    #"es": "es_es",
+    #"mx": "es_mx",
+    #"fr": "fr_fr",
+    #"it": "it_it",
+    #"ja": "ja_jp",
+    #"ko": "ko_kr",
+    #"pl": "pl_pl",
+    #"pt": "pt_br",
+    #"th": "th_th",
+    #"tr": "tr_tr",
+    #"ru": "ru_ru",
+    #"zh": "zh_tw"
 }
 
 class CardData:
