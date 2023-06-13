@@ -60,7 +60,9 @@ if format == "standard":
 else:
     card_pool = card_pool_eternal
     cards_and_weights = deepcopy(cards_and_weights_eternal_default)
-amount_regions = amount_regions_default
+min_amount_regions = amount_regions_default
+max_amount_regions = amount_regions_default
+amount_regions = random.randint(min_amount_regions, max_amount_regions)
 min_amount_cards = amount_cards_default
 max_amount_cards = amount_cards_default
 amount_cards = random.randint(min_amount_cards, max_amount_cards)

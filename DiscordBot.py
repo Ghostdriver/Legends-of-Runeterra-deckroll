@@ -397,18 +397,20 @@ class DiscordBot(discord.Client):
     async def _get_amount_regions(self, message_content: str, message: discord.Message, card_pool: CardPool) -> int:
         amount_regions = self.amount_regions_default
         max_regions = len(ALL_REGIONS) + len(card_pool.runeterra_champions) - 1
-        amount_regions_regex = r".*regions=(\d+).*"
+        amount_regions_regex = r".*regions=(\d+)(\-(\d+))?.*"
         amount_regions_regex_match = re.match(amount_regions_regex, message_content)
         if bool(amount_regions_regex_match):
-            amount_regions = int(amount_regions_regex_match.group(1))
-            if amount_regions < 1:
+            min_amount_regions = int(amount_regions_regex_match.group(1))
+            max_amount_regions = int(amount_regions_regex_match.group(3)) if amount_regions_regex_match.group(3) else int(amount_regions_regex_match.group(1))
+            if min_amount_regions < 1:
                 error = f"detected a given amount of regions of {amount_regions}, but the amount of regions can not be less than 1!"
                 await message.channel.send(error)
                 raise ValueError(error)
-            if amount_regions > max_regions:
+            if max_amount_regions > max_regions:
                 error = f"detected a given amount of regions of {amount_regions}, but the amount of regions can not be greater than the amount of normal regions + runeterra champions ({max_regions})!"
                 await message.channel.send(error)
                 raise ValueError(error)
+            amount_regions = random.randint(min_amount_regions, max_amount_regions)
         return amount_regions
     
     async def _get_amount_cards(self, message_content: str, message: discord.Message) -> int:
