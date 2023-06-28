@@ -161,7 +161,8 @@ class DiscordBot(discord.Client):
                 BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
                 - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
-                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7
+                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7,
+                Heart of the Huntress = Set7b
                 - change card weights based on their rarity: <rarity>=<number> --> epic=10
                 Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
                 """
