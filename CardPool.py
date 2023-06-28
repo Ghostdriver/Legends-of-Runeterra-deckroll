@@ -27,7 +27,7 @@ logger.addHandler(fh)
 class CardPool:
     def __init__(self, format: Literal["client_Formats_Eternal_name", "client_Formats_Standard_name"] = "client_Formats_Standard_name") -> None:
         '''init card pool'''
-        RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Advanced Intel", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Stylish Shot", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "En Garde", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Barbed Chain", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "The Unforgiving Cold", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Nine Lives", "Place Your Bets", "Portalpalooza", "The Time Has Come", "Aurora Porealis", "Celestial Trifecta", "Formula", "Glory's Call", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
+        RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Construct of Desolation", "Demacian Tellstones", "Facecheck", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Stylish Shot", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Advanced Intel", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Discreet Invitation", "En Garde", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Barbed Chain", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood",  "Glory's Call", "Mimic", "Nine Lives", "Place Your Bets", "Portalpalooza", "Rejuvenating Breeze", "The Time Has Come", "The Unforgiving Cold", "Aurora Porealis", "Celestial Trifecta", "Formula", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
         self.format = format
         self.all_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
         self.collectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
@@ -45,7 +45,9 @@ class CardPool:
         self.jax_followers: List[CardData] = []
         self.jhin_followers: List[CardData] = []
         self.kayn_and_varus_followers: List[CardData] = []
+        self.neeko_followers: List[CardData] = []
         self.ryze_followers: List[CardData] = []
+        self.the_poro_king_followers: List[CardData] = []
         self.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT: Dict[str, List[CardData]] = {
             "Aatrox": self.aatrox_followers,
             "Bard": self.bard_followers,
@@ -53,7 +55,9 @@ class CardPool:
             "Jax": self.jax_followers,
             "Jhin": self.jhin_followers,
             "Kayn": self.kayn_and_varus_followers,
+            "Neeko": self.neeko_followers,
             "Ryze": self.ryze_followers,
+            "The Poro King": self.the_poro_king_followers,
             "Varus": self.kayn_and_varus_followers
         }
 
@@ -107,6 +111,7 @@ class CardPool:
             if "DARKIN" in non_champion.subtypes:
                 self.aatrox_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.aatrox_followers)} Cards for Aatrox")
+
         # Bard
         for non_champion in self.all_non_champions:
             # "06RU001T3" is the Chime Card
@@ -114,16 +119,19 @@ class CardPool:
             if CHIME_CARD_CARD_CODE in non_champion.associated_card_refs:
                 self.bard_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.bard_followers)} Cards for Bard")
+
         # Evelynn
         for non_champion in self.all_non_champions:
             if "Husk" in non_champion.description_raw:
                 self.evelynn_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.evelynn_followers)} Cards for Evelynn")
+
         # Jax
         for non_champion in self.all_non_champions:
             if "WEAPONMASTER" in non_champion.subtypes:
                 self.jax_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.jax_followers)} Cards for Jax")
+
         # Jhin
         for non_champion in self.all_non_champions:
             for associated_card in non_champion.associated_card_refs:
@@ -133,16 +141,33 @@ class CardPool:
                             self.jhin_followers.append(non_champion)
                             break
         logger.debug(f"CardPool initialized with {len(self.jhin_followers)} Cards for Jhin")
+
         # Kayn and Varus
         for non_champion in self.all_non_champions:
             if "CULTIST" in non_champion.subtypes:
                 self.kayn_and_varus_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.kayn_and_varus_followers)} Cards for Kayn and Varus")
+
+        # Neeko
+        neeko_follower_subtypes = ["BIRD", "CAT", "DOG", "ELNUK", "FAE", "REPTILE", "SPIDER"]
+        for non_champion in self.all_non_champions:
+            for subtype in non_champion.subtypes:
+                if subtype in neeko_follower_subtypes:
+                    self.neeko_followers.append(non_champion)
+                    break
+        logger.debug(f"CardPool initialized with {len(self.neeko_followers)} Cards for Neeko")
+
         # Ryze
         for non_champion in self.all_non_champions:
             if non_champion.name in RYZE_FOLLOWER_NAMES:
                 self.ryze_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.ryze_followers)} Cards for Ryze")
+
+        # The Poro King
+        for non_champion in self.all_non_champions:
+            if "PORO" in non_champion.subtypes or "poro" in non_champion.description_raw.lower():
+                self.the_poro_king_followers.append(non_champion)
+        logger.debug(f"CardPool initialized with {len(self.the_poro_king_followers)} Cards for The Poro King")
 
     def get_card_by_card_code(self, card_code: str, language: str = "en_us") -> CardData:
         for card in self.all_cards_with_localization[language]:

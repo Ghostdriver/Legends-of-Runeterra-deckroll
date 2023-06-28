@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7"]
+CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7", "set7b"]
 CARD_TYPES_COLLECTIBLE_CARDS = ["Champion", "Equipment", "Landmark", "Spell", "Unit"]
 CARD_FORMAT_REFS = ["client_Formats_Eternal_name", "client_Formats_Standard_name"]
 RARITIES = ["Common", "Rare", "Epic", "Champion"]
@@ -46,7 +46,11 @@ class CardData:
         self.card_type: str = card["type"]
         self.is_collectible: bool = card["collectible"]
         self.card_set: str = card["set"]
-        self.format_refs: List[str] = card["formatRefs"]
+        # workaround, because 07SH038T1 misses this field
+        if "formatRefs" in card:
+            self.format_refs: List[str] = card["formatRefs"]
+        else:
+            self.format_refs: List[str] = ["client_Formats_Eternal_name", "client_Formats_Standard_name"]
         
         if card["rarityRef"] == "Champion":
             self.is_champion: bool = True
