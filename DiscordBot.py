@@ -1,5 +1,5 @@
-from typing import  Dict, Literal
-from CardData import ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
+from typing import  Dict, List, Literal
+from CardData import CardData, ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
 from Deckroll import Deckroll, DECKROLL_ATTEMPTS
 from Draft import Draft, REACTIONS_NUMBERS
@@ -33,7 +33,7 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 
 class DiscordBot(discord.Client):
-    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[str, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, draft_champions_first_default: bool) -> None:
+    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_deck_rolls_default: int, disallow_duplicated_regions_and_champions_default: bool , amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, max_runeterra_regions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[CardData, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, draft_champions_first_default: bool) -> None:
         # Prefixes
         self.screenshot_prefix = screenshot_prefix
         self.decklink_prefix = decklink_prefix
@@ -44,14 +44,17 @@ class DiscordBot(discord.Client):
         # Default values
         self.format_default = format_default
         self.language_default = language_default
+        self.amount_deck_rolls_default = amount_deck_rolls_default
+        self.disallow_duplicated_regions_and_champions_default = disallow_duplicated_regions_and_champions_default
         self.amount_regions_default = amount_regions_default
         self.amount_cards_default = amount_cards_default
         self.amount_champions_default = amount_champions_default
-        self.regions_and_weights_default = deepcopy(regions_and_weights_default)
-        self.cards_and_weights_standard_default = deepcopy(cards_and_weights_standard_default)
-        self.cards_and_weights_eternal_default = deepcopy(cards_and_weights_eternal_default)
-        self.count_chances_default = deepcopy(count_chances_default)
-        self.count_chances_two_remaining_deck_slots_default = deepcopy(count_chances_two_remaining_deck_slots_default)
+        self.max_runeterra_regions_default = max_runeterra_regions_default
+        self.regions_and_weights_default = regions_and_weights_default.copy()
+        self.cards_and_weights_standard_default = cards_and_weights_standard_default.copy()
+        self.cards_and_weights_eternal_default = cards_and_weights_eternal_default.copy()
+        self.count_chances_default = count_chances_default.copy()
+        self.count_chances_two_remaining_deck_slots_default = count_chances_two_remaining_deck_slots_default.copy()
         self.region_offers_per_pick_default = region_offers_per_pick_default
         self.regions_to_choose_per_pick_default = regions_to_choose_per_pick_default
         self.card_offers_per_pick_default = card_offers_per_pick_default
@@ -150,9 +153,12 @@ class DiscordBot(discord.Client):
                 - lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
-                - regions=<number> --> regions=10)
-                - cards=<number> --> cards=60)
-                - champions=<number> --> champions=10)
+                - amount-deck-rolls=<number>
+                - disallow-duplicated-regions-and-champions (only has an effect, if you roll multiple decks using amount-deck-rolls)
+                - regions=<number>
+                - max-runeterra-origins=<number>
+                - cards=<number>
+                - champions=<number>
                 - count-chances=<number>/<number>/<number> --> count-chances=33/33/34 (1/2/3 ofs)
                 - count-chances-two-remaining-deck-slots=<number>/<number> --> count-chances-two-remaining-deck-slots=50/50 (1/2 ofs)
                 - change region weights (standard weight is 1) with <region-name>=<number>
@@ -177,14 +183,17 @@ class DiscordBot(discord.Client):
                 # card pool and card weights based on format
                 if format == "standard":
                     card_pool = self.card_pool_standard
-                    cards_and_weights = deepcopy(self.cards_and_weights_standard_default)
+                    cards_and_weights = self.cards_and_weights_standard_default.copy()
                 else:
                     card_pool = self.card_pool_eternal
-                    cards_and_weights = deepcopy(self.cards_and_weights_eternal_default)
+                    cards_and_weights = self.cards_and_weights_eternal_default.copy()
                 language = await self._get_language(message_content=message_content)
+                amount_deck_rolls = await self._get_amount_deck_rolls(message_content=message_content, message=message)
+                disallow_duplicated_regions_and_champions = await self._get_disallow_duplicated_regions_and_champions(message_content=message_content)
                 amount_regions = await self._get_amount_regions(message_content=message_content, message=message, card_pool=card_pool)
                 amount_cards = await self._get_amount_cards(message_content=message_content, message=message)
                 amount_champions = await self._get_amount_champions(message_content=message_content, message=message, amount_cards=amount_cards)
+                max_runeterra_regions = await self._get_max_runeterra_regions(message_content=message_content, message=message)
                 regions_and_weights = await self._get_regions_and_weights(message_content=message_content, message=message)
                 count_chances = await self._get_count_chances(message_content=message_content, message=message)
                 count_chances_two_remaining_deck_slots = await self._get_count_chances_two_remaining_deck_slots(message_content=message_content, message=message)
@@ -192,19 +201,40 @@ class DiscordBot(discord.Client):
                 await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
 
-                deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
-                try:
-                    deckcode = deck_roll.roll_deck()
-                except RetryError as e:
-                    await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                    raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                logger.info(f"the deckroll gave: {deckcode}")
-
-                await message.channel.send(deckcode)
-
-                embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
+                deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
                 
-                await message.channel.send(embed=embed)
+                if amount_deck_rolls == 1:
+                    try:
+                        deckcode = deck_roll.roll_deck()
+                    except RetryError as e:
+                        await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                        raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                    logger.info(f"the deckroll gave: {deckcode}")
+
+                    await message.channel.send(deckcode)
+
+                    embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
+                    
+                    await message.channel.send(embed=embed)
+                else:
+                    deckcodes: List[str] = []
+                    for _ in range(amount_deck_rolls):
+                        try:
+                            deckcode = deck_roll.roll_deck()
+                        except RetryError as e:
+                            await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                            raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                        deckcodes.append(deckcode)
+                        if disallow_duplicated_regions_and_champions:
+                            for region in deck_roll.rolled_regions:
+                                regions_and_weights[region] = 0
+                            for champion in deck_roll.deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
+                                cards_and_weights[champion] = 0
+
+                    logger.info(f"the deckroll gave: {deckcodes}")
+
+                    deckcodes_with_link = [self.deckroll_deck_prefix + deckcode for deckcode in deckcodes]
+                    await message.channel.send("\n\n".join(deckcodes_with_link))
             
             # CARDROLL HELP
             elif message_content == "!cardroll help":
@@ -248,23 +278,21 @@ class DiscordBot(discord.Client):
                 # card pool and card weights based on format
                 if format == "standard":
                     card_pool = self.card_pool_standard
-                    cards_and_weights = deepcopy(self.cards_and_weights_standard_default)
+                    cards_and_weights = self.cards_and_weights_standard_default.copy()
                 else:
                     card_pool = self.card_pool_eternal
-                    cards_and_weights = deepcopy(self.cards_and_weights_eternal_default)
+                    cards_and_weights = self.cards_and_weights_eternal_default.copy()
                 language = await self._get_language(message_content=message_content)
                 
                 await self._change_card_weights_based_on_their_region(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
 
-                random_card_code = random.choices(list(cards_and_weights.keys()), weights=list(cards_and_weights.values()))[0]
+                random_card = random.choices(list(cards_and_weights.keys()), weights=list(cards_and_weights.values()))[0]
 
-                card = card_pool.get_card_by_card_code(card_code=random_card_code, language=language)
-                random_card_name = card.name
-                logger.info(f"the cardroll gave: {random_card_name}")
+                logger.info(f"the cardroll gave: {random_card.name}")
                 
-                embed, file = assemble_card_image(card_pool=card_pool, card_name=random_card_name, language=language)
+                embed, file = assemble_card_image(card_pool=card_pool, card_name=random_card.name, language=language)
 
                 await message.channel.send(embed=embed, file=file)
 
@@ -326,15 +354,16 @@ class DiscordBot(discord.Client):
                     # card pool and card weights based on format
                     if format == "standard":
                         card_pool = self.card_pool_standard
-                        cards_and_weights = deepcopy(self.cards_and_weights_standard_default)
+                        cards_and_weights = self.cards_and_weights_standard_default.copy()
                     else:
                         card_pool = self.card_pool_eternal
-                        cards_and_weights = deepcopy(self.cards_and_weights_eternal_default)
+                        cards_and_weights = self.cards_and_weights_eternal_default.copy()
                     language = await self._get_language(message_content=message_content)
                     amount_regions = await self._get_amount_regions(message_content=message_content, message=message, card_pool=card_pool)
                     amount_cards = await self._get_amount_cards(message_content=message_content, message=message)
                     # here max amount champions, because it can (likely) happen without the option draft_champions_first, that not a fix amount of champions is chosen
                     max_amount_champions = await self._get_amount_champions(message_content=message_content, message=message, amount_cards=amount_cards)
+                    max_runeterra_regions = await self._get_max_runeterra_regions(message_content=message_content, message=message)
                     regions_and_weights = await self._get_regions_and_weights(message_content=message_content, message=message)
                     count_chances = await self._get_count_chances(message_content=message_content, message=message)
                     count_chances_two_remaining_deck_slots = await self._get_count_chances_two_remaining_deck_slots(message_content=message_content, message=message)
@@ -350,9 +379,9 @@ class DiscordBot(discord.Client):
                     draft_champions_first = await self._get_draft_champions_first(message_content=message_content)
 
                     draft_message = await message.channel.send(content="Let's start drafting :)")
-                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, card_bucket_size=card_bucket_size, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, draft_champions_first=draft_champions_first)
+                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, max_runeterra_regions=max_runeterra_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, card_bucket_size=card_bucket_size, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, draft_champions_first=draft_champions_first)
                     await self.drafts[draft_message.id].start_draft()
-
+ 
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user != self.user and reaction.emoji in REACTIONS_NUMBERS.keys() and reaction.message.id in self.drafts.keys() and user == self.drafts[reaction.message.id].user:
             # Prevents the user to add reaction, that are out of bounds for the current choices
@@ -395,6 +424,27 @@ class DiscordBot(discord.Client):
                     break
         return language
     
+    async def _get_amount_deck_rolls(self, message_content: str, message: discord.Message) -> int:
+        MAX_AMOUNT_DECK_ROLLS = 10
+        amount_deck_rolls = self.amount_deck_rolls_default
+        amount_deck_rolls_regex = r".*amount-deck-rolls=(\d+).*"
+        amount_deck_rolls_regex_match = re.match(amount_deck_rolls_regex, message_content)
+        if bool(amount_deck_rolls_regex_match):
+            amount_deck_rolls = int(amount_deck_rolls_regex_match.group(1))
+            if not (1 <= amount_deck_rolls <= MAX_AMOUNT_DECK_ROLLS):
+                error = f"the amount deck rolls has to be between 1 and {MAX_AMOUNT_DECK_ROLLS}!"
+                await message.channel.send(error)
+                raise ValueError(error)        
+        return amount_deck_rolls
+
+    async def _get_disallow_duplicated_regions_and_champions(self, message_content: str) -> bool:
+        disallow_duplicated_regions_and_champions = self.disallow_duplicated_regions_and_champions_default
+        disallow_duplicated_regions_and_champions_regex = r".*disallow-duplicated-regions-and-champions.*"
+        disallow_duplicated_regions_and_champions_regex_match = re.match(disallow_duplicated_regions_and_champions_regex, message_content)
+        if bool(disallow_duplicated_regions_and_champions_regex_match):
+            disallow_duplicated_regions_and_champions = True
+        return disallow_duplicated_regions_and_champions
+
     async def _get_amount_regions(self, message_content: str, message: discord.Message, card_pool: CardPool) -> int:
         amount_regions = self.amount_regions_default
         max_regions = len(ALL_REGIONS) + len(card_pool.runeterra_champions) - 1
@@ -488,6 +538,18 @@ class DiscordBot(discord.Client):
                 raise ValueError(error)
         return count_chances_two_remaining_deck_slots
     
+    async def _get_max_runeterra_regions(self, message_content: str, message: discord.Message) -> int:
+        max_runeterra_regions = self.max_runeterra_regions_default
+        max_runeterra_regions_regex = r".*max-runeterra-origins=(\d+).*"
+        max_runeterra_regions_regex_match = re.match(max_runeterra_regions_regex, message_content)
+        if bool(max_runeterra_regions_regex_match):
+            max_runeterra_regions = int(max_runeterra_regions_regex_match.group(1))
+            if not (0 <= max_runeterra_regions <= 1000):
+                error = f"the maximum amount of runeterra regions has to be between 0 and 1000!"
+                await message.channel.send(error)
+                raise ValueError(error)        
+        return max_runeterra_regions
+
     async def _get_regions_and_weights(self, message_content: str, message: discord.Message) -> Dict[str, int]:
         regions_and_weights = deepcopy(self.regions_and_weights_default)
         for region_name in ALL_REGIONS:   
@@ -516,7 +578,7 @@ class DiscordBot(discord.Client):
                 for collectible_card in card_pool.collectible_cards:
                     card_region_refs_lower = [card_region_ref.lower() for card_region_ref in collectible_card.region_refs]
                     if region_name.lower() in card_region_refs_lower:
-                        cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+                        cards_and_weights[collectible_card] *= card_weight_change_factor
 
     async def _change_card_weights_based_on_their_set(self, message_content: str, message: discord.Message, cards_and_weights: Dict[str, int], card_pool: CardPool) -> None:
         for card_set in CARD_SETS:
@@ -530,7 +592,7 @@ class DiscordBot(discord.Client):
                     raise ValueError(error)
                 for collectible_card in card_pool.collectible_cards:
                     if collectible_card.card_set.lower() == card_set.lower():
-                        cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+                        cards_and_weights[collectible_card] *= card_weight_change_factor
 
     async def _change_card_weights_based_on_their_rarity(self, message_content: str, message: discord.Message, cards_and_weights: Dict[str, int], card_pool: CardPool) -> None:
         for rarity in RARITIES:
@@ -544,7 +606,7 @@ class DiscordBot(discord.Client):
                     raise ValueError(error)
                 for collectible_card in card_pool.collectible_cards:
                     if collectible_card.rarity_ref.lower() == rarity.lower():
-                        cards_and_weights[collectible_card.card_code] *= card_weight_change_factor
+                        cards_and_weights[collectible_card] *= card_weight_change_factor
 
     # DRAFTING MODIFICATIONS
     async def _get_region_offers_per_pick(self, message_content: str, message: discord.Message) -> int:

@@ -1,3 +1,4 @@
+from CardData import CardData
 from CardPool import CardPool
 from typing import Dict, List, Literal
 import discord
@@ -23,13 +24,15 @@ REACTIONS_NUMBERS = {
 NUMBERS_REACTIONS = { value: key for key, value in REACTIONS_NUMBERS.items() }
 
 class Draft:
-    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[str, int], max_amount_champions: int, draft_champions_first: bool) -> None:
+    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, max_runeterra_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[CardData, int], max_amount_champions: int, draft_champions_first: bool) -> None:
         self.draft_init_message_content = draft_init_message_content
         self.draft_message = draft_message
         self.discord_bot_user = discord_bot_user
         self.user = user
         self.card_pool = card_pool
         self.amount_regions = amount_regions
+        self.runeterra_regions: int = 0
+        self.max_runeterra_regions = max_runeterra_regions
         self.picked_regions: List[str] = []
         self.region_offers_per_pick = region_offers_per_pick
         self.regions_to_choose_per_pick = regions_to_choose_per_pick
@@ -51,7 +54,7 @@ class Draft:
         self.cards_and_weights_non_champions: Dict[str, int] = {}
         self.cards_and_weights_champions_and_non_champions_combined: Dict[str, int] = {}
         for card in self.card_pool.runeterra_champions:
-            self.cards_and_weights_runeterra_champions[card.name] = self.cards_and_weights[card.card_code]
+            self.cards_and_weights_runeterra_champions[card.name] = self.cards_and_weights[card]
         self.draft_champions_first = draft_champions_first
         self.drafted_deck = Deck(card_pool=self.card_pool)
         self.drafted_deck.max_cards = amount_cards
@@ -172,7 +175,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
         if self.amount_regions < len(self.picked_regions) + self.regions_to_choose_per_pick:
             self.regions_to_choose_per_pick = self.amount_regions - len(self.picked_regions)
         # exclude Runeterra, if no more free champ slot
-        if self.drafted_deck.remaining_champions == 0:
+        if self.drafted_deck.remaining_champions == 0 or self.runeterra_regions == self.max_runeterra_regions:
             self.regions_and_weights["Runeterra"] = 0
         # Weights for numpy choice have to be equal to one
         total_weight = sum(self.regions_and_weights.values())
@@ -191,6 +194,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
             if picked_region in ALL_REGIONS:
                 self.regions_and_weights[picked_region] = 0
             else:
+                self.runeterra_regions += 1
                 runeterra_champion = self.card_pool.get_collectible_card_by_card_name(picked_region)
                 self.drafted_deck.add_card_and_count(runeterra_champion.card_code, 1)
                 self.cards_and_weights_runeterra_champions[picked_region] = 0
@@ -200,19 +204,19 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
         for region in self.picked_regions:
             if region in ALL_REGIONS:
                 for champion in self.card_pool.non_runeterra_champions:
-                    if region in champion.region_refs and self.cards_and_weights[champion.card_code] > 0:
-                        self.cards_and_weights_champions[champion.name] = self.cards_and_weights[champion.card_code]
+                    if region in champion.region_refs and self.cards_and_weights[champion] > 0:
+                        self.cards_and_weights_champions[champion.name] = self.cards_and_weights[champion]
                 for non_champion in self.card_pool.all_non_champions:
-                    if region in non_champion.region_refs and self.cards_and_weights[non_champion.card_code] > 0:
-                        self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[champion.card_code]
+                    if region in non_champion.region_refs and self.cards_and_weights[non_champion] > 0:
+                        self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[champion]
 
             else:
                 runeterra_champion = self.card_pool.get_collectible_card_by_card_name(region)
-                if self.cards_and_weights[runeterra_champion.card_code] > 0:
-                    self.cards_and_weights_champions[runeterra_champion.name] = self.cards_and_weights[runeterra_champion.card_code]
+                if self.cards_and_weights[runeterra_champion] > 0:
+                    self.cards_and_weights_champions[runeterra_champion.name] = self.cards_and_weights[runeterra_champion]
                 for non_champion in self.card_pool.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT[runeterra_champion.name]:
-                    if self.cards_and_weights[non_champion.card_code] > 0:
-                        self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[non_champion.card_code]
+                    if self.cards_and_weights[non_champion] > 0:
+                        self.cards_and_weights_non_champions[non_champion.name] = self.cards_and_weights[non_champion]
 
         for card_name, weight in self.cards_and_weights_champions.items():
             self.cards_and_weights_champions_and_non_champions_combined[card_name] = weight
