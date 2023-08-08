@@ -24,7 +24,7 @@ REACTIONS_NUMBERS = {
 NUMBERS_REACTIONS = { value: key for key, value in REACTIONS_NUMBERS.items() }
 
 class Draft:
-    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, max_runeterra_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[CardData, int], max_amount_champions: int, draft_champions_first: bool) -> None:
+    def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, max_runeterra_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[CardData, int], max_amount_champions: int, max_copies_per_card: int, draft_champions_first: bool) -> None:
         self.draft_init_message_content = draft_init_message_content
         self.draft_message = draft_message
         self.discord_bot_user = discord_bot_user
@@ -47,6 +47,7 @@ class Draft:
         self.champion_bucket_size = card_bucket_size
         self.non_champion_bucket_size = card_bucket_size
         self.cards_and_weights = cards_and_weights
+        self.max_copies_per_card = max_copies_per_card
         # Used for the region rolls
         self.cards_and_weights_runeterra_champions: Dict[str, int] = {}
         # These weights are used for the rolls, when picking cards, and populated by using the picked regions -- which list is used depends on draft champions first
@@ -212,7 +213,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
 
             else:
                 runeterra_champion = self.card_pool.get_collectible_card_by_card_name(region)
-                if self.cards_and_weights[runeterra_champion] > 0:
+                if self.cards_and_weights[runeterra_champion] > 0 and self.max_copies_per_card > 1:
                     self.cards_and_weights_champions[runeterra_champion.name] = self.cards_and_weights[runeterra_champion]
                 for non_champion in self.card_pool.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT[runeterra_champion.name]:
                     if self.cards_and_weights[non_champion] > 0:
@@ -348,7 +349,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
     async def _add_chosen_card(self, card_name: str) -> None:
         card = self.card_pool.get_collectible_card_by_card_name(card_name)
         self.drafted_deck.add_card_and_count(card.card_code, 1)
-        if self.drafted_deck.cards_and_counts[card.card_code] == 3:
+        if self.drafted_deck.cards_and_counts[card.card_code] == self.max_copies_per_card:
             del self.cards_and_weights_champions_and_non_champions_combined[card_name]
             if card.is_champion:
                 del self.cards_and_weights_champions[card_name]

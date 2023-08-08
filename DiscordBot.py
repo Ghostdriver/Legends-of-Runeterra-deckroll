@@ -33,7 +33,7 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 
 class DiscordBot(discord.Client):
-    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_deck_rolls_default: int, disallow_duplicated_regions_and_champions_default: bool , amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, max_runeterra_regions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[CardData, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, draft_champions_first_default: bool) -> None:
+    def __init__(self, screenshot_prefix: str, decklink_prefix: str, deckroll_deck_prefix: str, card_pool_standard: CardPool, card_pool_eternal: CardPool, format_default: Literal["standard", "eternal"], language_default: str, amount_deck_rolls_default: int, disallow_duplicated_regions_and_champions_default: bool , amount_regions_default: int, amount_cards_default: int, amount_champions_default: int, max_runeterra_regions_default: int, regions_and_weights_default: Dict[str, int], cards_and_weights_standard_default: Dict[CardData, int], cards_and_weights_eternal_default: Dict[str, int], count_chances_default: Dict[int, int], count_chances_two_remaining_deck_slots_default: Dict[str, int], region_offers_per_pick_default: int, regions_to_choose_per_pick_default: int, card_offers_per_pick_default: int, cards_to_choose_per_pick_default: int, card_bucket_size_default: int, max_copies_per_card_default: int, draft_champions_first_default: bool) -> None:
         # Prefixes
         self.screenshot_prefix = screenshot_prefix
         self.decklink_prefix = decklink_prefix
@@ -60,6 +60,7 @@ class DiscordBot(discord.Client):
         self.card_offers_per_pick_default = card_offers_per_pick_default
         self.cards_to_choose_per_pick_default = cards_to_choose_per_pick_default
         self.card_bucket_size_default = card_bucket_size_default
+        self.max_copies_per_card_default = max_copies_per_card_default
         self.draft_champions_first_default = draft_champions_first_default
         # Drafts
         self.drafts: Dict[int, Draft] = {}
@@ -171,6 +172,7 @@ class DiscordBot(discord.Client):
                 Heart of the Huntress = Set7b
                 - change card weights based on their rarity: <rarity>=<number> --> epic=10
                 Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
+                - singleton sets the amount regions to 3 and the count-chances appropriately
                 """
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
@@ -323,6 +325,10 @@ class DiscordBot(discord.Client):
 
                 card-bucket-size=x --> The deck is drafted from buckets with multiple cards (up to 5 for now)
                 (can't be used together with cards_to_choose_per_pick (atleast for now))
+
+                max-copies-per-card=x (can be used for singleton decks with max-copies-per-card=1 for example)
+
+                - singleton sets the amount of regions to 3 and max-copies-per-card to 1
                 """
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
@@ -376,10 +382,11 @@ class DiscordBot(discord.Client):
                     card_offers_per_pick = await self._get_card_offers_per_pick(message_content=message_content, message=message)
                     cards_to_choose_per_pick = await self._get_cards_to_choose_per_pick(message_content=message_content, message=message, card_offers_per_pick=card_offers_per_pick)
                     card_bucket_size = await self._get_card_bucket_size(message_content=message_content, message=message, cards_to_choose_per_pick=cards_to_choose_per_pick)
+                    max_copies_per_card = await self._get_max_copies_per_card(message_content=message_content, message=message)
                     draft_champions_first = await self._get_draft_champions_first(message_content=message_content)
 
                     draft_message = await message.channel.send(content="Let's start drafting :)")
-                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, max_runeterra_regions=max_runeterra_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, card_bucket_size=card_bucket_size, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, draft_champions_first=draft_champions_first)
+                    self.drafts[draft_message.id] = Draft(draft_init_message_content=message_content, draft_message=draft_message, discord_bot_user=self.user, user=message.author, card_pool=card_pool, amount_regions=amount_regions, max_runeterra_regions=max_runeterra_regions, region_offers_per_pick=region_offers_per_pick, regions_to_choose_per_pick=regions_to_choose_per_pick, regions_and_weights=regions_and_weights, amount_cards=amount_cards, card_offers_per_pick=card_offers_per_pick, cards_to_choose_per_pick=cards_to_choose_per_pick, card_bucket_size=card_bucket_size, cards_and_weights=cards_and_weights, max_amount_champions=max_amount_champions, max_copies_per_card=max_copies_per_card, draft_champions_first=draft_champions_first)
                     await self.drafts[draft_message.id].start_draft()
  
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
@@ -462,6 +469,8 @@ class DiscordBot(discord.Client):
                 await message.channel.send(error)
                 raise ValueError(error)
             amount_regions = random.randint(min_amount_regions, max_amount_regions)
+        if "singleton" in message_content:
+            return 3
         return amount_regions
     
     async def _get_amount_cards(self, message_content: str, message: discord.Message) -> int:
@@ -513,12 +522,18 @@ class DiscordBot(discord.Client):
             count_chances = {
                 1: count_chances_one_ofs,
                 2: count_chances_two_ofs,
-                3: count_chances_three_ofs,
+                3: count_chances_three_ofs
             }
             if (sum(list(count_chances.values())) != 100):
                 error = f"detected count-chances (1/2/3 ofs) {count_chances_one_ofs}/{count_chances_two_ofs}/{count_chances_three_ofs} -- the chances must sum up to 100!"
                 await message.channel.send(error)
                 raise ValueError(error)
+        if "singleton" in message_content:
+            return {
+                1: 100,
+                2: 0,
+                3: 0
+            }
         return count_chances
     
     async def _get_count_chances_two_remaining_deck_slots(self, message_content: str, message: discord.Message) -> Dict[int, int]:
@@ -536,6 +551,11 @@ class DiscordBot(discord.Client):
                 error = f"detected count-chances-two-remaining-deck-slots (1/2 ofs) {count_chances_two_remaining_deck_slots_one_ofs}/{count_chances_two_remaining_deck_slots_two_ofs} -- the chances must sum up to 100!"
                 await message.channel.send(error)
                 raise ValueError(error)
+        if "singleton" in message_content:
+            return {
+                1: 100,
+                2: 0
+            }
         return count_chances_two_remaining_deck_slots
     
     async def _get_max_runeterra_regions(self, message_content: str, message: discord.Message) -> int:
@@ -680,6 +700,20 @@ class DiscordBot(discord.Client):
                 await message.channel.send(error)
                 raise ValueError(error)
         return card_bucket_size
+    
+    async def _get_max_copies_per_card(self, message_content: str, message: discord.Message) -> int:
+        max_copies_per_card = self.max_copies_per_card_default
+        max_copies_per_card_regex = r".*max-copies-per-card=(\d).*"
+        max_copies_per_card_regex_match = re.match(max_copies_per_card_regex, message_content)
+        if bool(max_copies_per_card_regex_match):
+            max_copies_per_card = int(max_copies_per_card_regex_match.group(1))
+            if max_copies_per_card < 1 or max_copies_per_card > 3:
+                error = f"detected a given value for max_copies_per_card of {max_copies_per_card}, but the card_bucket_size has to be between 1 and 3!"
+                await message.channel.send(error)
+                raise ValueError(error)
+        if "singleton" in message_content:
+            return 1
+        return max_copies_per_card
     
     async def _get_draft_champions_first(self, message_content: str) -> bool:
         draft_champions_first = self.draft_champions_first_default
