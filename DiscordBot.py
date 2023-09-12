@@ -1,7 +1,7 @@
 from typing import  Dict, List, Literal
 from CardData import CardData, ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
 from CardPool import CardPool
-from Deckroll import Deckroll, DECKROLL_ATTEMPTS
+from Deckroll import Deckrolls, DECKROLL_ATTEMPTS
 from Draft import Draft, REACTIONS_NUMBERS
 import discord
 from copy import deepcopy
@@ -80,8 +80,25 @@ class DiscordBot(discord.Client):
     async def on_message(self, message: discord.Message):
         if isinstance(message.content, str):
             message_content: str = message.content.lower()
-            if message_content.startswith("!deck ") or message_content.startswith("!deckroll") or message_content.startswith("!card ") or message_content.startswith("!cardroll") or message_content.startswith("!draft"):
+            if message_content.startswith("!roll ") or message_content.startswith("!deck ") or message_content.startswith("!deckroll") or message_content.startswith("!card ") or message_content.startswith("!cardroll") or message_content.startswith("!draft"):
                 logger.info(f"Message from {message.author}: {message_content}")
+
+            # ROLL RANDOM NUMBER
+            if message_content.startswith("!roll "):
+                random_number_regex = r"!roll (\d+)(?:[ -](\d+))?"
+                random_number_regex_match = re.match(random_number_regex, message_content)
+                if bool(random_number_regex_match):
+                    if random_number_regex_match.group(2):
+                        min_number = int(random_number_regex_match.group(1))
+                        max_number = int(random_number_regex_match.group(2))
+                    else:
+                        min_number = 1
+                        max_number = int(random_number_regex_match.group(1))
+                    if max_number < min_number:
+                        await message.channel.send("The given maximum number is lower than the given minimum number!")
+                    else:
+                        rolled_number = random.randint(min_number, max_number)
+                        await message.channel.send(f"{message.author.name} rolled a number between {min_number} and {max_number} and got a {rolled_number}!")
 
             # DISPLAY DECK
             if message_content.startswith("!deck "):
@@ -169,7 +186,7 @@ class DiscordBot(discord.Client):
                 - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
                 Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7,
-                Heart of the Huntress = Set7b
+                Heart of the Huntress = Set7b, Fates Voyage Onward = Set8
                 - change card weights based on their rarity: <rarity>=<number> --> epic=10
                 Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
                 - singleton sets the amount regions to 3 and the count-chances appropriately
@@ -203,38 +220,20 @@ class DiscordBot(discord.Client):
                 await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
 
-                deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
+                deck_rolls = Deckrolls(amount_deck_rolls=amount_deck_rolls,disallow_duplicated_regions_and_champions=disallow_duplicated_regions_and_champions, card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
                 
+                try:
+                    deckcodes = deck_rolls.roll_decks()
+                except RetryError as e:
+                    await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                    raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                logger.info(f"the deckroll gave: {deckcodes}")
+
                 if amount_deck_rolls == 1:
-                    try:
-                        deckcode = deck_roll.roll_deck()
-                    except RetryError as e:
-                        await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                        raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                    logger.info(f"the deckroll gave: {deckcode}")
-
-                    await message.channel.send(deckcode)
-
-                    embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
-                    
+                    await message.channel.send(deckcodes)
+                    embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcodes, language=language)
                     await message.channel.send(embed=embed)
                 else:
-                    deckcodes: List[str] = []
-                    for _ in range(amount_deck_rolls):
-                        try:
-                            deckcode = deck_roll.roll_deck()
-                        except RetryError as e:
-                            await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                            raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                        deckcodes.append(deckcode)
-                        if disallow_duplicated_regions_and_champions:
-                            for region in deck_roll.rolled_regions:
-                                regions_and_weights[region] = 0
-                            for champion in deck_roll.deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
-                                cards_and_weights[champion] = 0
-
-                    logger.info(f"the deckroll gave: {deckcodes}")
-
                     deckcodes_with_link = [self.deckroll_deck_prefix + deckcode for deckcode in deckcodes]
                     await message.channel.send("\n\n".join(deckcodes_with_link))
             

@@ -2,7 +2,7 @@ from typing import  Dict, Literal
 from CardData import CardData
 from CardData import ALL_REGIONS
 from CardPool import CardPool
-from Deckroll import Deckroll
+from Deckroll import Deckrolls
 from DiscordBot import DiscordBot
 import random
 
@@ -11,7 +11,7 @@ SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
 DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
 DECKROLL_DECK_PREFIX: str = "https://runeterra.ar/decks/code/"
 CREATE_EXCEL_SPREADSHEAT: bool = False
-AMOUNT_DECKS: int = 100
+AMOUNT_PLAYERS: int = 100
 START_DISCORD_BOT: bool = True
 
 # INIT CARD_POOLS
@@ -58,6 +58,8 @@ draft_champions_first_default: bool = False
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
 format: Literal["standard", "eternal"] = "standard"
+amount_deck_rolls = 5
+disallow_duplicated_regions_and_champions = True
 if format == "standard":
     card_pool = card_pool_standard
     cards_and_weights = cards_and_weights_standard_default.copy()
@@ -77,12 +79,12 @@ regions_and_weights = regions_and_weights_default.copy()
 max_runeterra_regions = max_runeterra_regions_default
 count_chances = count_chances_default.copy()
 count_chances_two_remaining_deck_slots = count_chances_two_remaining_deck_slots_default.copy()
-#deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
+
+deck_rolls = Deckrolls(amount_deck_rolls=amount_deck_rolls, disallow_duplicated_regions_and_champions=disallow_duplicated_regions_and_champions, card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
 #print(deck_roll.roll_deck())
 
 if __name__ == "__main__":
     if CREATE_EXCEL_SPREADSHEAT:
-        deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
-        deck_roll.roll_deck_spreadsheat(amount_decks=AMOUNT_DECKS, decklink_prefix=DECKROLL_DECK_PREFIX)
+        deck_rolls.roll_deck_spreadsheat(amount_players=AMOUNT_PLAYERS, decklink_prefix=DECKROLL_DECK_PREFIX)
     if START_DISCORD_BOT:
         discord_bot = DiscordBot(screenshot_prefix=SCREENSHOT_PREFIX, decklink_prefix=DECKLINK_PREFIX, deckroll_deck_prefix=DECKLINK_PREFIX, card_pool_standard=card_pool_standard, card_pool_eternal=card_pool_eternal, format_default=format_default, language_default=language_default, amount_deck_rolls_default=amount_deck_rolls_default, disallow_duplicated_regions_and_champions_default=disallow_duplicated_regions_and_champions_default, amount_regions_default=amount_regions_default, amount_cards_default=amount_cards_default, amount_champions_default=amount_champions_default, max_runeterra_regions_default=max_runeterra_regions, regions_and_weights_default=regions_and_weights_default, cards_and_weights_standard_default=cards_and_weights_standard_default, cards_and_weights_eternal_default=cards_and_weights_eternal_default, count_chances_default=count_chances_default, count_chances_two_remaining_deck_slots_default=count_chances_two_remaining_deck_slots_default, region_offers_per_pick_default=region_offers_per_pick_default, regions_to_choose_per_pick_default=regions_to_choose_per_pick_default, card_offers_per_pick_default=card_offers_per_pick_default, cards_to_choose_per_pick_default=cards_to_choose_per_pick_default, card_bucket_size_default=card_bucket_size_default, max_copies_per_card_default=max_copies_per_card_default, draft_champions_first_default=draft_champions_first_default)

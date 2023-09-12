@@ -6,9 +6,62 @@ from Deck import Deck
 import datetime
 import xlsxwriter
 import os
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_attempt, RetryError
 
 DECKROLL_ATTEMPTS = 10
+
+class Deckrolls:
+    def __init__(self, amount_deck_rolls: int, disallow_duplicated_regions_and_champions: bool, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, max_runeterra_regions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[CardData, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
+        self.amount_deck_rolls = amount_deck_rolls
+        self.disallow_duplicated_regions_and_champions = disallow_duplicated_regions_and_champions
+        self.deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
+    
+    def roll_deck_spreadsheat(self, amount_players: int, decklink_prefix: str) -> None:
+        start_time = datetime.datetime.now()
+        DECKROLL_PATH = "created_deckroll_excel_spreadsheats/"
+        workbook_name: str = f"Deckroll-{datetime.date.today().isoformat()}.xlsx"
+        with xlsxwriter.Workbook(os.path.join(DECKROLL_PATH, workbook_name)) as workbook:
+            worksheet = workbook.add_worksheet("rolled decks")
+            first_line = ["Player"] + ["Deck Link"] * self.amount_deck_rolls
+            for column, element in enumerate(first_line):
+                worksheet.write(0, column, element)
+            for row in range(1, amount_players + 1):
+                regions_and_weights = self.deck_roll.regions_and_weights.copy()
+                cards_and_weights = self.deck_roll.cards_and_weights.copy()
+                deckcodes = self.roll_decks()
+                self.deck_roll.regions_and_weights = regions_and_weights
+                self.deck_roll.cards_and_weights = cards_and_weights
+                if isinstance(deckcodes, str):
+                    deckcodes = [deckcodes]
+                for index, deckcode in enumerate(deckcodes):
+                    worksheet.write(row, index + 1, decklink_prefix + deckcode)
+        end_time = datetime.datetime.now()
+        needed_time = end_time - start_time
+        print(
+            f"Created Excel {workbook_name} with {amount_players * self.amount_deck_rolls} rolled decks in {needed_time}"
+        )
+
+    def roll_decks(self) -> str | List[str]:
+        if self.amount_deck_rolls == 1:
+            try:
+                deckcode = self.deck_roll.roll_deck()
+            except RetryError as e:
+                raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+            return deckcode
+        else:
+            deckcodes: List[str] = []
+            for _ in range(self.amount_deck_rolls):
+                try:
+                    deckcode = self.deck_roll.roll_deck()
+                except RetryError as e:
+                    raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
+                deckcodes.append(deckcode)
+                if self.disallow_duplicated_regions_and_champions:
+                    for region in self.deck_roll.rolled_regions:
+                        self.deck_roll.regions_and_weights[region] = 0
+                    for champion in self.deck_roll.deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
+                        self.deck_roll.cards_and_weights[champion] = 0
+            return deckcodes
 
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, max_runeterra_regions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[CardData, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
@@ -26,26 +79,6 @@ class Deckroll:
             self.cards_and_weights_runeterra_champions[card] = self.cards_and_weights[card]
         self.count_chances = count_chances
         self.count_chances_two_remaining_deck_slots = count_chances_two_remaining_deck_slots
-
-    def roll_deck_spreadsheat(self, amount_decks: int, decklink_prefix: str) -> None:
-        PATH: str = "created_deckroll_excel_spreadsheats/"
-        start_time = datetime.datetime.now()
-        workbook_name: str = f"Deckroll-{datetime.date.today().isoformat()}.xlsx"
-        with xlsxwriter.Workbook(os.path.join(PATH, workbook_name)) as workbook:
-            worksheet = workbook.add_worksheet("rolled decks")
-            first_line = ["Player", "Deck Link", "Deck Code"]
-            for column, element in enumerate(first_line):
-                worksheet.write(0, column, element)
-            for row in range(1, amount_decks + 1):
-                deckcode = self.roll_deck()
-                worksheet.write(row, 0, row)
-                worksheet.write(row, 1, deckcode)
-                worksheet.write(row, 2, decklink_prefix + deckcode)
-        end_time = datetime.datetime.now()
-        needed_time = end_time - start_time
-        print(
-            f"Created Excel {workbook_name} with {amount_decks} rolled decks in {needed_time}"
-        )
 
     @retry(stop=stop_after_attempt(DECKROLL_ATTEMPTS))
     def roll_deck(self) -> str:
