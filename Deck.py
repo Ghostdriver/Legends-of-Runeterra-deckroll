@@ -39,6 +39,29 @@ class Deck:
         lor_deck = lor_deckcodes.LoRDeck(deck_formatted)
         deck_code = lor_deck.encode()
         return deck_code
+
+    @property
+    def regions(self) -> List[str]:
+        regions = []
+        runeterra_champions: List[str] = []
+        for champion in self.deck_sorted_by_card_type["Champion"]:
+            if self.cards_and_counts[champion.card_code] > 0 and len(champion.region_refs) == 1:
+                if champion.region_refs[0] == "Runeterra":
+                    regions.append(champion.name)
+                    runeterra_champions.append(champion.name)
+                elif champion.region_refs[0] not in regions:
+                    regions.append(champion.region_refs[0])
+        for card_code in self.cards_and_counts.keys():
+            for card in self.card_pool.collectible_cards:
+                if card.card_code == card_code and self.cards_and_counts[card_code] > 0 and not card.is_champion and len(card.region_refs) == 1 and card.region_refs[0] not in regions:
+                    card_is_a_runeterra_champion_follower = False
+                    for runeterra_champion in runeterra_champions:
+                        for runeterra_champion_follower in self.card_pool.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT[runeterra_champion]:
+                            if runeterra_champion_follower.card_code == card_code:
+                                card_is_a_runeterra_champion_follower = True
+                    if not card_is_a_runeterra_champion_follower:
+                        regions.append(card.region_refs[0])
+        return regions
     
     @property
     def deck_sorted_by_card_type(self) -> Dict[str, List[CardData]]:

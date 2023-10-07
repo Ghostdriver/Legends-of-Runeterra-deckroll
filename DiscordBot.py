@@ -223,17 +223,20 @@ class DiscordBot(discord.Client):
                 deck_rolls = Deckrolls(amount_deck_rolls=amount_deck_rolls,disallow_duplicated_regions_and_champions=disallow_duplicated_regions_and_champions, card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
                 
                 try:
-                    deckcodes = deck_rolls.roll_decks()
+                    decks = deck_rolls.roll_decks()
                 except RetryError as e:
                     await message.channel.send(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
                     raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                logger.info(f"the deckroll gave: {deckcodes}")
 
                 if amount_deck_rolls == 1:
-                    await message.channel.send(deckcodes)
-                    embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcodes, language=language)
+                    deckcode = decks.deckcode
+                    logger.info(f"the deckroll gave: {deckcode}")
+                    await message.channel.send(deckcode)
+                    embed = assemble_deck_embed(card_pool=card_pool, deckcode=deckcode, language=language)
                     await message.channel.send(embed=embed)
                 else:
+                    deckcodes = [deck.deckcode for deck in decks]
+                    logger.info(f"the deckroll gave: {deckcodes}")
                     deckcodes_with_link = [self.deckroll_deck_prefix + deckcode for deckcode in deckcodes]
                     await message.channel.send("\n\n".join(deckcodes_with_link))
             

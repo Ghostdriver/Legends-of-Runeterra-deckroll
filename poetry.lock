@@ -124,6 +124,14 @@ test = ["coverage", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "ty
 voice = ["PyNaCl (>=1.3.0,<1.6)"]
 
 [[package]]
+name = "et-xmlfile"
+version = "1.1.0"
+description = "An implementation of lxml.xmlfile for the standard library"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "greenlet"
 version = "2.0.1"
 description = "Lightweight in-process concurrent programming"
@@ -174,6 +182,17 @@ description = "Fundamental package for array computing in Python"
 category = "main"
 optional = false
 python-versions = ">=3.8"
+
+[[package]]
+name = "openpyxl"
+version = "3.1.2"
+description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+et-xmlfile = "*"
 
 [[package]]
 name = "packaging"
@@ -319,7 +338,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "ee7209e11e05419b054e60274e26750d2c9f3123a879244aecfe3c57cce08752"
+content-hash = "3dfb82cc7442dbef529361baf8e76188103b6ed491f8a2dd25e3c8073c6ed973"
 
 [metadata.files]
 aiohttp = []
@@ -338,12 +357,14 @@ click = [
 ]
 colorama = []
 "discord.py" = []
+et-xmlfile = []
 greenlet = []
 idna = []
 lor-deckcodes = []
 multidict = []
 mypy-extensions = []
 numpy = []
+openpyxl = []
 packaging = []
 pathspec = []
 pillow = []

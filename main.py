@@ -10,6 +10,7 @@ import random
 SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
 DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
 DECKROLL_DECK_PREFIX: str = "https://runeterra.ar/decks/code/"
+DECKLINK_TEXT: Literal["decklink", "regions", "champions"] = "decklink"
 CREATE_EXCEL_SPREADSHEAT: bool = False
 AMOUNT_PLAYERS: int = 100
 START_DISCORD_BOT: bool = True
@@ -57,25 +58,29 @@ max_copies_per_card_default: int = 3
 draft_champions_first_default: bool = False
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
-format: Literal["standard", "eternal"] = "standard"
-amount_deck_rolls = 5
-disallow_duplicated_regions_and_champions = True
+format: Literal["standard", "eternal"] = "standard" # = format_default
+amount_deck_rolls = 5 # = amount_deck_rolls_default
+disallow_duplicated_regions_and_champions = True # = disallow_duplicated_regions_and_champions_default
 if format == "standard":
     card_pool = card_pool_standard
     cards_and_weights = cards_and_weights_standard_default.copy()
+    for collectible_card in card_pool.collectible_cards:
+        if collectible_card.card_set.lower() == "set8":
+            cards_and_weights[collectible_card] *= 10
 else:
     card_pool = card_pool_eternal
     cards_and_weights = cards_and_weights_eternal_default.copy()
 min_amount_regions = amount_regions_default
 max_amount_regions = amount_regions_default
 amount_regions = random.randint(min_amount_regions, max_amount_regions)
-min_amount_cards = amount_cards_default
-max_amount_cards = amount_cards_default
+min_amount_cards = 50 # amount_cards_default
+max_amount_cards = 50 # amount_cards_default
 amount_cards = random.randint(min_amount_cards, max_amount_cards)
-min_amount_champions = amount_champions_default
-max_amount_champions = amount_champions_default
+min_amount_champions = 8 # amount_champions_default
+max_amount_champions = 8 # amount_champions_default
 amount_champions = random.randint(min_amount_champions, max_amount_champions)
 regions_and_weights = regions_and_weights_default.copy()
+regions_and_weights["Runeterra"] = 0
 max_runeterra_regions = max_runeterra_regions_default
 count_chances = count_chances_default.copy()
 count_chances_two_remaining_deck_slots = count_chances_two_remaining_deck_slots_default.copy()
@@ -85,6 +90,6 @@ deck_rolls = Deckrolls(amount_deck_rolls=amount_deck_rolls, disallow_duplicated_
 
 if __name__ == "__main__":
     if CREATE_EXCEL_SPREADSHEAT:
-        deck_rolls.roll_deck_spreadsheat(amount_players=AMOUNT_PLAYERS, decklink_prefix=DECKROLL_DECK_PREFIX)
+        deck_rolls.roll_deck_spreadsheat(amount_players=AMOUNT_PLAYERS, decklink_prefix=DECKROLL_DECK_PREFIX, decklink_text=DECKLINK_TEXT)
     if START_DISCORD_BOT:
         discord_bot = DiscordBot(screenshot_prefix=SCREENSHOT_PREFIX, decklink_prefix=DECKLINK_PREFIX, deckroll_deck_prefix=DECKLINK_PREFIX, card_pool_standard=card_pool_standard, card_pool_eternal=card_pool_eternal, format_default=format_default, language_default=language_default, amount_deck_rolls_default=amount_deck_rolls_default, disallow_duplicated_regions_and_champions_default=disallow_duplicated_regions_and_champions_default, amount_regions_default=amount_regions_default, amount_cards_default=amount_cards_default, amount_champions_default=amount_champions_default, max_runeterra_regions_default=max_runeterra_regions, regions_and_weights_default=regions_and_weights_default, cards_and_weights_standard_default=cards_and_weights_standard_default, cards_and_weights_eternal_default=cards_and_weights_eternal_default, count_chances_default=count_chances_default, count_chances_two_remaining_deck_slots_default=count_chances_two_remaining_deck_slots_default, region_offers_per_pick_default=region_offers_per_pick_default, regions_to_choose_per_pick_default=regions_to_choose_per_pick_default, card_offers_per_pick_default=card_offers_per_pick_default, cards_to_choose_per_pick_default=cards_to_choose_per_pick_default, card_bucket_size_default=card_bucket_size_default, max_copies_per_card_default=max_copies_per_card_default, draft_champions_first_default=draft_champions_first_default)

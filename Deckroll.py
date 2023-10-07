@@ -1,6 +1,6 @@
 from CardData import CardData
 from CardPool import CardPool
-from typing import List, Dict
+from typing import List, Dict, Literal
 import random
 from Deck import Deck
 import datetime
@@ -16,52 +16,58 @@ class Deckrolls:
         self.disallow_duplicated_regions_and_champions = disallow_duplicated_regions_and_champions
         self.deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
     
-    def roll_deck_spreadsheat(self, amount_players: int, decklink_prefix: str) -> None:
+    def roll_deck_spreadsheat(self, amount_players: int, decklink_prefix: str, decklink_text: Literal["decklink", "regions", "champions"]) -> None:
         start_time = datetime.datetime.now()
         DECKROLL_PATH = "created_deckroll_excel_spreadsheats/"
         workbook_name: str = f"Deckroll-{datetime.date.today().isoformat()}.xlsx"
         with xlsxwriter.Workbook(os.path.join(DECKROLL_PATH, workbook_name)) as workbook:
             worksheet = workbook.add_worksheet("rolled decks")
-            first_line = ["Player"] + ["Deck Link"] * self.amount_deck_rolls
+            first_line = ["Player"] + ["Deck Link"] * self.amount_deck_rolls + ["Deck Code"] * self.amount_deck_rolls
             for column, element in enumerate(first_line):
                 worksheet.write(0, column, element)
             for row in range(1, amount_players + 1):
                 regions_and_weights = self.deck_roll.regions_and_weights.copy()
                 cards_and_weights = self.deck_roll.cards_and_weights.copy()
-                deckcodes = self.roll_decks()
+                decks = self.roll_decks()
                 self.deck_roll.regions_and_weights = regions_and_weights
                 self.deck_roll.cards_and_weights = cards_and_weights
-                if isinstance(deckcodes, str):
-                    deckcodes = [deckcodes]
-                for index, deckcode in enumerate(deckcodes):
-                    worksheet.write(row, index + 1, decklink_prefix + deckcode)
+                if isinstance(decks, Deck):
+                    decks = [decks]
+                for index, deck in enumerate(decks):
+                    if decklink_text == "decklink":
+                        worksheet.write(row, index + 1, decklink_prefix + deck.deckcode)
+                    elif decklink_text == "regions":
+                        worksheet.write_url(row=row, col=index + 1, url=decklink_prefix + deck.deckcode, string=" ".join(deck.regions))
+                    elif decklink_text == "champions":
+                        worksheet.write_url(row=row, col=index + 1, url=decklink_prefix + deck.deckcode, string=" ".join([champion.name for champion in deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion")]))
+                    worksheet.write(row, index + 1 + len(decks), deck.deckcode)
         end_time = datetime.datetime.now()
         needed_time = end_time - start_time
         print(
             f"Created Excel {workbook_name} with {amount_players * self.amount_deck_rolls} rolled decks in {needed_time}"
         )
 
-    def roll_decks(self) -> str | List[str]:
+    def roll_decks(self) -> Deck | List[Deck]:
         if self.amount_deck_rolls == 1:
             try:
-                deckcode = self.deck_roll.roll_deck()
+                deck = self.deck_roll.roll_deck()
             except RetryError as e:
                 raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-            return deckcode
+            return deck
         else:
-            deckcodes: List[str] = []
+            decks: List[Deck] = []
             for _ in range(self.amount_deck_rolls):
                 try:
-                    deckcode = self.deck_roll.roll_deck()
+                    deck = self.deck_roll.roll_deck()
                 except RetryError as e:
                     raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
-                deckcodes.append(deckcode)
+                decks.append(deck)
                 if self.disallow_duplicated_regions_and_champions:
                     for region in self.deck_roll.rolled_regions:
                         self.deck_roll.regions_and_weights[region] = 0
-                    for champion in self.deck_roll.deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
+                    for champion in deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
                         self.deck_roll.cards_and_weights[champion] = 0
-            return deckcodes
+            return decks
 
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, max_runeterra_regions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[CardData, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
@@ -81,7 +87,7 @@ class Deckroll:
         self.count_chances_two_remaining_deck_slots = count_chances_two_remaining_deck_slots
 
     @retry(stop=stop_after_attempt(DECKROLL_ATTEMPTS))
-    def roll_deck(self) -> str:
+    def roll_deck(self) -> Deck:
         # init Deck
         self.deck = Deck(card_pool=self.card_pool)
         self.deck.max_cards = self.amount_cards
@@ -91,7 +97,7 @@ class Deckroll:
         self._roll_runeterra_champions()
         self._roll_non_runeterra_champions()
         self._roll_non_champions()
-        return self.deck.deckcode
+        return self.deck
 
     def _roll_regions(self) -> None:
         '''return the regionRefs of the rolled regions'''
