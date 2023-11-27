@@ -146,51 +146,51 @@ class DiscordBot(discord.Client):
             # DECKROLL HELP
             elif message_content == "!deckroll help":
                 title = "Deckroll help"
-                help_message = """
-                The bot is open source and can be found under:
-                https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll
-
-                Short explanation of the deckroll functionality:
-                  At first the regions are rolled
-                (Runeterra is considered a region and if rolled it is replaced through a Runeterra champion later on,
-                Runeterra can be rolled multiple times, but for a 2 region deck the chance is 1/10 * 1/10 = 1%)
-                  the cards to roll are filtered for the rolled regions
-                  then the champions and the card amount is rolled until all champion slots are used
-                  then all non-champions and their amount is rolled until all total card slots are used
-
-                For the default deckroll just use !deckroll - the default settings are:
-                standard format, american english
-                2 regions, 40 cards, 6 champions, chance for every region and card is equal
-                card amount chances are for 1/2/3 ofs: 20%/30%/50%
-                if only two champions/cards remain following count chances are used 1/2 of: 33%/67% 
-
-                this default deckroll can be indivualized with the following modifications (combine them as you want,
-                but wrong inputs and e.g. excluding all cards will return an error or just give no response,
-                also if the modification doesn't get noticed by the input parser it just gets ignored):
-                  eternal for eternal format
-                  lang=<language> --> lang=es
-                de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
-                ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
-                  amount-deck-rolls=<number>
-                  disallow-duplicated-regions-and-champions (only has an effect, if you roll multiple decks using amount-deck-rolls)
-                  regions=<number>
-                  max-runeterra-origins=<number>
-                  cards=<number>
-                  champions=<number>
-                  count-chances=<number>/<number>/<number> --> count-chances=33/33/34 (1/2/3 ofs)
-                  count-chances-two-remaining-deck-slots=<number>/<number> --> count-chances-two-remaining-deck-slots=50/50 (1/2 ofs)
-                  change region weights (standard weight is 1) with <region-name>=<number>
-                e.g. exclude region Demacia=0 // make region very very likely Runeterra=1000
-                the region names, that have to be used, so the modification gets recognized are:
-                BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
-                  change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
-                Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
-                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7,
-                Heart of the Huntress = Set7b, Fates Voyage Onward = Set8
-                  change card weights based on their rarity: <rarity>=<number> --> epic=10
-                Rarities: common, rare, epic (champion doesn't make sense, because those are handled separately)
-                  singleton sets the amount regions to 3 and the count-chances appropriately
-                """
+                help_message = (
+                "The bot is open source and can be found under:\n"
+                "https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll\n"
+                "\n"
+                "Short explanation of the deckroll functionality:\n"
+                "- At first the regions are rolled\n"
+                "(Runeterra is considered a region and if rolled it is replaced through a Runeterra champion later on,\n"
+                "Runeterra can be rolled multiple times, but for a 2 region deck the chance is 1/10 * 1/10 = 1%)\n"
+                "- the cards to roll are filtered for the rolled regions\n"
+                "- then the champions and the card amount is rolled until all champion slots are used\n"
+                "- then all non-champions and their amount is rolled until all total card slots are used\n"
+                "\n"
+                "For the default deckroll just use !deckroll - the default settings are:\n"
+                "standard format, american english\n"
+                "2 regions, 40 cards, 6 champions, chance for every region and card is equal\n"
+                "card amount chances are for 1/2/3 ofs: 20%/30%/50%\n"
+                "if only two champions/cards remain following count chances are used 1/2 of: 33%/67% \n"
+                "\n"
+                "this default deckroll can be indivualized with the following modifications (combine them as you want,\n"
+                "but wrong inputs and e.g. excluding all cards will return an error or just give no response,\n"
+                "also if the modification doesn't get noticed by the input parser it just gets ignored):\n"
+                "- eternal for eternal format\n"
+                "- lang=<language> --> lang=es\n"
+                "de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,\n"
+                "ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese\n"
+                "- amount-deck-rolls=<number>\n"
+                "- disallow-duplicated-regions-and-champions (only has an effect, if you roll multiple decks using amount-deck-rolls)\n"
+                "- regions=<number> or <number>-<number> to get a random number of regions in that range\n"
+                "- max-runeterra-origins=<number>\n"
+                "- cards=<number> or <number>-<number> to get a random number of cards in that range\n"
+                "- champions=<number> or <number>-<number> to get a random number of champions in that range\n"
+                "- count-chances=<number>/<number>/<number> --> count-chances=33/33/34 (1/2/3 ofs)\n"
+                "- count-chances-two-remaining-deck-slots=<number>/<number> --> count-chances-two-remaining-deck-slots=50/50 (1/2 ofs)\n"
+                "- change region weights (standard weight is 1) with <region-name>=<number>\n"
+                "e.g. exclude region Demacia=0 // make region very very likely Runeterra=1000\n"
+                "the region names, that have to be used, so the modification gets recognized are:\n"
+                "BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra\n"
+                "- change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10\n"
+                "Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,\n"
+                "Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7,\n"
+                "Heart of the Huntress = Set7b, Fates Voyage Onward = Set8\n"
+                "- change card weights based on their rarity: <rarity>=<number> --> epic=10\n"
+                "Rarities: common, rare, epic (champion doesn't make sense, because those are handled separately)\n"
+                "- singleton sets the amount regions to 3 and the count-chances appropriately\n"
+                )
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
                 )
