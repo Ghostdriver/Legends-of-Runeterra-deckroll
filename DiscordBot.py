@@ -151,12 +151,12 @@ class DiscordBot(discord.Client):
                 https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll
 
                 Short explanation of the deckroll functionality:
-                - At first the regions are rolled
+                  At first the regions are rolled
                 (Runeterra is considered a region and if rolled it is replaced through a Runeterra champion later on,
                 Runeterra can be rolled multiple times, but for a 2 region deck the chance is 1/10 * 1/10 = 1%)
-                - the cards to roll are filtered for the rolled regions
-                - then the champions and the card amount is rolled until all champion slots are used
-                - then all non-champions and their amount is rolled until all total card slots are used
+                  the cards to roll are filtered for the rolled regions
+                  then the champions and the card amount is rolled until all champion slots are used
+                  then all non-champions and their amount is rolled until all total card slots are used
 
                 For the default deckroll just use !deckroll - the default settings are:
                 standard format, american english
@@ -167,29 +167,29 @@ class DiscordBot(discord.Client):
                 this default deckroll can be indivualized with the following modifications (combine them as you want,
                 but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
-                - eternal for eternal format
-                - lang=<language> --> lang=es
+                  eternal for eternal format
+                  lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
-                - amount-deck-rolls=<number>
-                - disallow-duplicated-regions-and-champions (only has an effect, if you roll multiple decks using amount-deck-rolls)
-                - regions=<number>
-                - max-runeterra-origins=<number>
-                - cards=<number>
-                - champions=<number>
-                - count-chances=<number>/<number>/<number> --> count-chances=33/33/34 (1/2/3 ofs)
-                - count-chances-two-remaining-deck-slots=<number>/<number> --> count-chances-two-remaining-deck-slots=50/50 (1/2 ofs)
-                - change region weights (standard weight is 1) with <region-name>=<number>
+                  amount-deck-rolls=<number>
+                  disallow-duplicated-regions-and-champions (only has an effect, if you roll multiple decks using amount-deck-rolls)
+                  regions=<number>
+                  max-runeterra-origins=<number>
+                  cards=<number>
+                  champions=<number>
+                  count-chances=<number>/<number>/<number> --> count-chances=33/33/34 (1/2/3 ofs)
+                  count-chances-two-remaining-deck-slots=<number>/<number> --> count-chances-two-remaining-deck-slots=50/50 (1/2 ofs)
+                  change region weights (standard weight is 1) with <region-name>=<number>
                 e.g. exclude region Demacia=0 // make region very very likely Runeterra=1000
                 the region names, that have to be used, so the modification gets recognized are:
                 BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
-                - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
+                  change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
                 Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7,
                 Heart of the Huntress = Set7b, Fates Voyage Onward = Set8
-                - change card weights based on their rarity: <rarity>=<number> --> epic=10
-                Rarities: common, rare, epic (champion doesn't make sense, because those are handled separate)
-                - singleton sets the amount regions to 3 and the count-chances appropriately
+                  change card weights based on their rarity: <rarity>=<number> --> epic=10
+                Rarities: common, rare, epic (champion doesn't make sense, because those are handled separately)
+                  singleton sets the amount regions to 3 and the count-chances appropriately
                 """
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
@@ -252,24 +252,24 @@ class DiscordBot(discord.Client):
                 the default cardroll (!cardroll) can be indivualized with the following modifications
                 (combine them as you want, but wrong inputs and e.g. excluding all cards will return an error or just give no response,
                 also if the modification doesn't get noticed by the input parser it just gets ignored):
-                - eternal for eternal format
-                - lang=<language> --> lang=es
+                  eternal for eternal format
+                  lang=<language> --> lang=es
                 de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
                 ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
 
-                - when modifying the card weights the standard weight of 1 is multiplied with the modification
+                  when modifying the card weights the standard weight of 1 is multiplied with the modification
                 --> e.g. passing Demacia=100 and Champion=100, Garen is 10000 times as likely as non demacian, non champion cards
                 
-                - change card weights based on their region (standard weight is 1) with <region-name>=<number>
+                  change card weights based on their region (standard weight is 1) with <region-name>=<number>
                 e.g. exclude region Demacia=0 // make region very very likely Runeterra=10000
                 the region names, that have to be used, so the modification gets recognized are:
                 BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
 
-                - change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
+                  change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
                 Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
                 Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7
 
-                - change card weights based on their rarity: <rarity>=<number> --> epic=10
+                  change card weights based on their rarity: <rarity>=<number> --> epic=10
                 Rarities: common, rare, epic champion
                 """
                 embed = discord.Embed(
