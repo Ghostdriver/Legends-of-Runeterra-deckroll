@@ -2,6 +2,7 @@ from typing import List, Dict
 
 CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7", "set7b", "set8"]
 CARD_TYPES_COLLECTIBLE_CARDS = ["Champion", "Equipment", "Landmark", "Spell", "Unit"]
+CARD_TYPES_COLLECTIBLE_CARDS_WITHOUT_CHAMPION = ["Equipment", "Landmark", "Spell", "Unit"]
 CARD_FORMAT_REFS = ["client_Formats_Eternal_name", "client_Formats_Standard_name"]
 RARITIES = ["Common", "Rare", "Epic", "Champion"]
 ALL_REGIONS = ["BandleCity", "Bilgewater", "Demacia", "Freljord", "Ionia", "Noxus", "PiltoverZaun", "ShadowIsles", "Shurima", "Targon", "Runeterra"]

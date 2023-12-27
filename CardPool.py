@@ -41,6 +41,7 @@ class CardPool:
         # RUNETERRA CHAMPS
         self.aatrox_followers: List[CardData] = []
         self.bard_followers: List[CardData] = []
+        self.elder_dragon_followers: List[CardData] = []
         self.evelynn_followers: List[CardData] = []
         self.jax_followers: List[CardData] = []
         self.jhin_followers: List[CardData] = []
@@ -51,6 +52,7 @@ class CardPool:
         self.RUNETERRA_CHAMPIONS_NAMES_FOLLOWER_LIST_DICT: Dict[str, List[CardData]] = {
             "Aatrox": self.aatrox_followers,
             "Bard": self.bard_followers,
+            "Elder Dragon": self.elder_dragon_followers,
             "Evelynn": self.evelynn_followers,
             "Jax": self.jax_followers,
             "Jhin": self.jhin_followers,
@@ -120,6 +122,12 @@ class CardPool:
             if CHIME_CARD_CARD_CODE in non_champion.associated_card_refs or non_champion.name == "Mister Thrift":
                 self.bard_followers.append(non_champion)
         logger.debug(f"CardPool initialized with {len(self.bard_followers)} Cards for Bard")
+
+        # Elder Dragon
+        for non_champion in self.all_non_champions:
+            if non_champion.card_type == "Unit" and non_champion.cost >= 6:
+                self.elder_dragon_followers.append(non_champion)
+        logger.debug(f"CardPool initialized with {len(self.elder_dragon_followers)} Cards for the Elder Dragon")
 
         # Evelynn
         for non_champion in self.all_non_champions:

@@ -1,5 +1,5 @@
 from typing import  Dict, List, Literal
-from CardData import CardData, ALL_REGIONS, CARD_SETS, RARITIES, LANGUAGES
+from CardData import CardData, ALL_REGIONS, CARD_SETS, RARITIES, CARD_TYPES_COLLECTIBLE_CARDS_WITHOUT_CHAMPION, LANGUAGES
 from CardPool import CardPool
 from Deckroll import Deckrolls, DECKROLL_ATTEMPTS
 from Draft import Draft, REACTIONS_NUMBERS
@@ -189,6 +189,8 @@ class DiscordBot(discord.Client):
                 "Heart of the Huntress = Set7b, Fates Voyage Onward = Set8\n"
                 "- change card weights based on their rarity: <rarity>=<number> --> epic=10\n"
                 "Rarities: common, rare, epic (champion doesn't make sense, because those are handled separately)\n"
+                "- change card weights based on their type: <cardtype>=<number> --> equipment=10\n"
+                "Types: unit, spell, landmark, equipment\n"
                 "- singleton sets the amount regions to 3 and the count-chances appropriately\n"
                 )
                 embed = discord.Embed(
@@ -219,6 +221,7 @@ class DiscordBot(discord.Client):
                         
                 await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
+                await self._change_card_weights_based_on_their_type(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
 
                 deck_rolls = Deckrolls(amount_deck_rolls=amount_deck_rolls,disallow_duplicated_regions_and_champions=disallow_duplicated_regions_and_champions, card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
                 
@@ -243,35 +246,37 @@ class DiscordBot(discord.Client):
             # CARDROLL HELP
             elif message_content == "!cardroll help":
                 title = "Cardroll help"
-                help_message = """
-                The bot is open source and can be found under:
-                https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll
-
-                cardroll just picks one random card from all collectible cards
-
-                the default cardroll (!cardroll) can be indivualized with the following modifications
-                (combine them as you want, but wrong inputs and e.g. excluding all cards will return an error or just give no response,
-                also if the modification doesn't get noticed by the input parser it just gets ignored):
-                  eternal for eternal format
-                  lang=<language> --> lang=es
-                de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,
-                ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese
-
-                  when modifying the card weights the standard weight of 1 is multiplied with the modification
-                --> e.g. passing Demacia=100 and Champion=100, Garen is 10000 times as likely as non demacian, non champion cards
-                
-                  change card weights based on their region (standard weight is 1) with <region-name>=<number>
-                e.g. exclude region Demacia=0 // make region very very likely Runeterra=10000
-                the region names, that have to be used, so the modification gets recognized are:
-                BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra
-
-                  change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10
-                Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,
-                Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7
-
-                  change card weights based on their rarity: <rarity>=<number> --> epic=10
-                Rarities: common, rare, epic champion
-                """
+                help_message = (
+                "The bot is open source and can be found under:\n"
+                "https://github.com/Ghostdriver/Legends-of-Runeterra-deckroll\n"
+                "\n"
+                "cardroll just picks one random card from all collectible cards\n"
+                "\n"
+                "the default cardroll (!cardroll) can be indivualized with the following modifications\n"
+                "(combine them as you want, but wrong inputs and e.g. excluding all cards will return an error or just give no response,\n"
+                "also if the modification doesn't get noticed by the input parser it just gets ignored):\n"
+                "- eternal for eternal format\n"
+                "- lang=<language> --> lang=es\n"
+                "de=German, en=English (default), es=Spanish, mx=Mexican Spanish, fr=French, it=Italian, ja=Japanese,\n"
+                "ko=Korean, pl=Polish, pt=Portuguese, th=Thai, tr=Turkish, ru=Russian, zh=Chinese\n"
+                "\n"
+                "- when modifying the card weights the standard weight of 1 is multiplied with the modification\n"
+                "--> e.g. passing Demacia=100 and Champion=100, Garen is 10000 times as likely as non demacian, non champion cards\n"
+                "\n"
+                "- change card weights based on their region (standard weight is 1) with <region-name>=<number>\n"
+                "e.g. exclude region Demacia=0 // make region very very likely Runeterra=10000\n"
+                "the region names, that have to be used, so the modification gets recognized are:\n"
+                "BandleCity, Bilgewater, Demacia, Freljord, Ionia, Noxus, PiltoverZaun, ShadowIsles, Shurima, Targon, Runeterra\n"
+                "\n"
+                "- change card weights based on their set (standard weight is 1): <set>=<number> --> Set6cde=10\n"
+                "Foundations = Set1, Rising Tides = Set2, Call of the Mountain = Set3, Empires of the Ascended = Set4,\n"
+                "Beyond the Bandlewood = Set5, Worldwalker = Set6, The Darkin Saga = Set6cde, Glory In Navori = Set7\n"
+                "\n"
+                "- change card weights based on their rarity: <rarity>=<number> --> epic=10\n"
+                "Rarities: common, rare, epic champion\n"
+                "- change card weights based on their type: <cardtype>=<number> --> equipment=10\n"
+                "Types: unit, spell, landmark, equipment\n"
+                )
                 embed = discord.Embed(
                     title=title, description=help_message, color=0xF90202
                 )
@@ -291,6 +296,7 @@ class DiscordBot(discord.Client):
                 await self._change_card_weights_based_on_their_region(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                 await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
+                await self._change_card_weights_based_on_their_type(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)               
 
                 random_card = random.choices(list(cards_and_weights.keys()), weights=list(cards_and_weights.values()))[0]
 
@@ -378,7 +384,8 @@ class DiscordBot(discord.Client):
                             
                     await self._change_card_weights_based_on_their_set(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
                     await self._change_card_weights_based_on_their_rarity(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
-                    
+                    await self._change_card_weights_based_on_their_type(message_content=message_content, message=message, cards_and_weights=cards_and_weights, card_pool=card_pool)
+                  
                     region_offers_per_pick = await self._get_region_offers_per_pick(message_content=message_content, message=message)
                     regions_to_choose_per_pick = await self._get_regions_to_choose_per_pick(message_content=message_content, message=message, region_offers_per_pick=region_offers_per_pick)
                     card_offers_per_pick = await self._get_card_offers_per_pick(message_content=message_content, message=message)
@@ -628,6 +635,20 @@ class DiscordBot(discord.Client):
                     raise ValueError(error)
                 for collectible_card in card_pool.collectible_cards:
                     if collectible_card.rarity_ref.lower() == rarity.lower():
+                        cards_and_weights[collectible_card] *= card_weight_change_factor
+
+    async def _change_card_weights_based_on_their_type(self, message_content: str, message: discord.Message, cards_and_weights: Dict[str, int], card_pool: CardPool) -> None:
+        for card_type in CARD_TYPES_COLLECTIBLE_CARDS_WITHOUT_CHAMPION:
+            card_weight_change_regex = rf".*{card_type.lower()}=(\d+).*"
+            card_weight_change_regex_match = re.match(card_weight_change_regex, message_content)
+            if bool(card_weight_change_regex_match):
+                card_weight_change_factor = int(card_weight_change_regex_match.group(1))
+                if card_weight_change_factor > MAX_CARD_WEIGHT_CHANGE_FACTOR:
+                    error = f"detected card weight change for card type {card_type} with the value {card_weight_change_factor} - only values between 0 and {MAX_CARD_WEIGHT_CHANGE_FACTOR} are allowed."
+                    await message.channel.send(error)
+                    raise ValueError(error)
+                for collectible_card in card_pool.collectible_cards:
+                    if collectible_card.card_type.lower() == card_type.lower():
                         cards_and_weights[collectible_card] *= card_weight_change_factor
 
     # DRAFTING MODIFICATIONS
