@@ -1,12 +1,13 @@
-from CardData import CardData
-from CardPool import CardPool
+import random
 from typing import Dict, List, Literal
+
 import discord
+import numpy as np
+
+from CardData import ALL_REGIONS, CardData
+from CardPool import CardPool
 from Deck import Deck
 from discord_images import assemble_deck_embed
-import random
-import numpy as np
-from CardData import ALL_REGIONS
 
 REACTIONS_NUMBERS = {
     "0️⃣": 0,
@@ -21,7 +22,8 @@ REACTIONS_NUMBERS = {
     "9️⃣": 9
 }
 
-NUMBERS_REACTIONS = { value: key for key, value in REACTIONS_NUMBERS.items() }
+NUMBERS_REACTIONS = {value: key for key, value in REACTIONS_NUMBERS.items()}
+
 
 class Draft:
     def __init__(self, draft_init_message_content: str, draft_message: discord.Message, discord_bot_user: discord.User, user: discord.User, card_pool: CardPool, amount_regions: int, max_runeterra_regions: int, region_offers_per_pick: int, regions_to_choose_per_pick: int, regions_and_weights: Dict[str, int], amount_cards: int, card_offers_per_pick: int, cards_to_choose_per_pick: int, card_bucket_size: int, cards_and_weights: Dict[CardData, int], max_amount_champions: int, max_copies_per_card: int, draft_champions_first: bool) -> None:
@@ -86,7 +88,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
         """
         try:
             await self.draft_message.edit(content=message, embed=self.deck_embed)
-        except discord.errors.HTTPException as e:
+        except discord.errors.HTTPException:
             DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
             deck_url = f"{DECKLINK_PREFIX}{self.drafted_deck.deckcode}"
             await self._remove_user_reactions()
@@ -121,7 +123,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
         await self._add_reactions()
         await self.update_draft_message()
 
-    async def user_adds_reaction(self, reaction: discord.Reaction) -> bool: 
+    async def user_adds_reaction(self, reaction: discord.Reaction) -> bool:
         self.current_reactions.append(reaction)
         if self.status == "Picking Regions":
             if len(self.current_reactions) == self.regions_to_choose_per_pick:
@@ -156,7 +158,7 @@ Cards drafted: {self.drafted_deck.amount_cards}/{self.drafted_deck.max_cards}
                     return True
                 await self._prepare_next_choices()
         return False
-    
+
     async def _prepare_next_choices(self) -> None:
         await self._roll_choices()
         await self._remove_user_reactions()

@@ -1,6 +1,6 @@
-from typing import List, Dict
+from typing import Dict, List
 
-CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7", "set7b", "set8"]
+CARD_SETS = ["set1", "set2", "set3", "set4", "set5", "set6", "set6cde", "set7", "set7b", "set8", "set9"]
 CARD_TYPES_COLLECTIBLE_CARDS = ["Champion", "Equipment", "Landmark", "Spell", "Unit"]
 CARD_TYPES_COLLECTIBLE_CARDS_WITHOUT_CHAMPION = ["Equipment", "Landmark", "Spell", "Unit"]
 CARD_FORMAT_REFS = ["client_Formats_Eternal_name", "client_Formats_Standard_name"]
@@ -22,6 +22,7 @@ LANGUAGES = {
     #"ru": "ru_ru",
     #"zh": "zh_tw"
 }
+
 
 class CardData:
     def __init__(self, card: Dict) -> None:
@@ -52,7 +53,7 @@ class CardData:
             self.format_refs: List[str] = card["formatRefs"]
         else:
             self.format_refs: List[str] = ["client_Formats_Eternal_name", "client_Formats_Standard_name"]
-        
+
         if card["rarityRef"] == "Champion":
             self.is_champion: bool = True
         else:

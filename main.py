@@ -1,10 +1,10 @@
-from typing import  Dict, Literal
-from CardData import CardData
-from CardData import ALL_REGIONS
+import random
+from typing import Dict, Literal
+
+from CardData import ALL_REGIONS, CardData
 from CardPool import CardPool
 from Deckroll import Deckrolls
 from DiscordBot import DiscordBot
-import random
 
 # CARD_SETS in CardData needs to be updated
 SCREENSHOT_PREFIX = "https://runeterra.ar/decks/bot/"
@@ -58,9 +58,9 @@ max_copies_per_card_default: int = 3
 draft_champions_first_default: bool = False
 
 # INDIVIDUAL DECKROLL FOR EXCEL SPREADSHEAT - change the values to fit your needs!
-format: Literal["standard", "eternal"] = "standard" # = format_default
-amount_deck_rolls = 5 # = amount_deck_rolls_default
-disallow_duplicated_regions_and_champions = True # = disallow_duplicated_regions_and_champions_default
+format: Literal["standard", "eternal"] = "standard"  # = format_default
+amount_deck_rolls = 5  # = amount_deck_rolls_default
+disallow_duplicated_regions_and_champions = True  # = disallow_duplicated_regions_and_champions_default
 if format == "standard":
     card_pool = card_pool_standard
     cards_and_weights = cards_and_weights_standard_default.copy()
@@ -73,11 +73,11 @@ else:
 min_amount_regions = amount_regions_default
 max_amount_regions = amount_regions_default
 amount_regions = random.randint(min_amount_regions, max_amount_regions)
-min_amount_cards = 50 # amount_cards_default
-max_amount_cards = 50 # amount_cards_default
+min_amount_cards = 50  # amount_cards_default
+max_amount_cards = 50  # amount_cards_default
 amount_cards = random.randint(min_amount_cards, max_amount_cards)
-min_amount_champions = 8 # amount_champions_default
-max_amount_champions = 8 # amount_champions_default
+min_amount_champions = 8  # amount_champions_default
+max_amount_champions = 8  # amount_champions_default
 amount_champions = random.randint(min_amount_champions, max_amount_champions)
 regions_and_weights = regions_and_weights_default.copy()
 regions_and_weights["Runeterra"] = 0

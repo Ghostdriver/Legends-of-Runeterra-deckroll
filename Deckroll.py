@@ -1,21 +1,24 @@
+import datetime
+import os
+import random
+from typing import Dict, List, Literal
+
+import xlsxwriter
+from tenacity import RetryError, retry, stop_after_attempt
+
 from CardData import CardData
 from CardPool import CardPool
-from typing import List, Dict, Literal
-import random
 from Deck import Deck
-import datetime
-import xlsxwriter
-import os
-from tenacity import retry, stop_after_attempt, RetryError
 
 DECKROLL_ATTEMPTS = 10
+
 
 class Deckrolls:
     def __init__(self, amount_deck_rolls: int, disallow_duplicated_regions_and_champions: bool, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, max_runeterra_regions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[CardData, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
         self.amount_deck_rolls = amount_deck_rolls
         self.disallow_duplicated_regions_and_champions = disallow_duplicated_regions_and_champions
         self.deck_roll = Deckroll(card_pool=card_pool, amount_regions=amount_regions, amount_cards=amount_cards, amount_champions=amount_champions, max_runeterra_regions=max_runeterra_regions, regions_and_weights=regions_and_weights, cards_and_weights=cards_and_weights, count_chances=count_chances, count_chances_two_remaining_deck_slots=count_chances_two_remaining_deck_slots)
-    
+
     def roll_deck_spreadsheat(self, amount_players: int, decklink_prefix: str, decklink_text: Literal["decklink", "regions", "champions"]) -> None:
         start_time = datetime.datetime.now()
         DECKROLL_PATH = "created_deckroll_excel_spreadsheats/"
@@ -51,7 +54,7 @@ class Deckrolls:
         if self.amount_deck_rolls == 1:
             try:
                 deck = self.deck_roll.roll_deck()
-            except RetryError as e:
+            except RetryError:
                 raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
             return deck
         else:
@@ -59,7 +62,7 @@ class Deckrolls:
             for _ in range(self.amount_deck_rolls):
                 try:
                     deck = self.deck_roll.roll_deck()
-                except RetryError as e:
+                except RetryError:
                     raise RetryError(f"Even after {DECKROLL_ATTEMPTS} rolls no valid deck could be rolled for the given settings")
                 decks.append(deck)
                 if self.disallow_duplicated_regions_and_champions:
@@ -68,6 +71,7 @@ class Deckrolls:
                     for champion in deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Champion"):
                         self.deck_roll.cards_and_weights[champion] = 0
             return decks
+
 
 class Deckroll:
     def __init__(self, card_pool: CardPool, amount_regions: int, amount_cards: int, amount_champions: int, max_runeterra_regions: int, regions_and_weights: Dict[str, int], cards_and_weights: Dict[CardData, int], count_chances: Dict[int, int], count_chances_two_remaining_deck_slots: Dict[int, int]) -> None:
@@ -113,7 +117,7 @@ class Deckroll:
             # Prevent duplicated rolled region (except Runeterra can be rolled multiple times if there are enough champions allowed)
             if rolled_region != "Runeterra":
                 regions_and_weights_roll[rolled_region] = 0
-    
+
     def _roll_runeterra_champions(self) -> None:
         '''rolls the runeterra champions and count and adds them to the deck'''
         # deepcopy to not screw up subsequent rolls
@@ -128,7 +132,7 @@ class Deckroll:
         # roll the amount of runeterra champions
         for rolled_runeterra_champion in self.rolled_runeterra_champions:
             self._roll_card_count(rolled_runeterra_champion)
-    
+
     def _roll_non_runeterra_champions(self) -> None:
         '''rolls the non runeterra champions'''
         # init cards and weights rollable champs for this roll (depends on the rolled regions)
@@ -143,7 +147,7 @@ class Deckroll:
             rolled_champion = random.choices(list(cards_and_weights_rollable_champions_roll.keys()), weights=list(cards_and_weights_rollable_champions_roll.values()))[0]
             self._roll_card_count(rolled_champion)
             cards_and_weights_rollable_champions_roll[rolled_champion] = 0
-        
+
     def _roll_non_champions(self) -> None:
         '''rolls all non champions'''
         # init cards and weights rollable non champions for this roll (depends on the rolled regions)

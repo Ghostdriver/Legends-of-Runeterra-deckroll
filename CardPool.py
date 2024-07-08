@@ -1,9 +1,11 @@
-from typing import List, Dict, Literal
-from CardData import CardData, CARD_SETS, LANGUAGES
-import requests
 import json
-import string
 import logging
+import string
+from typing import Dict, List, Literal
+
+import requests
+
+from CardData import CARD_SETS, LANGUAGES, CardData
 
 DEFAULT_LOCALE = "en_us"
 
@@ -27,7 +29,7 @@ logger.addHandler(fh)
 class CardPool:
     def __init__(self, format: Literal["client_Formats_Eternal_name", "client_Formats_Standard_name"] = "client_Formats_Standard_name") -> None:
         '''init card pool'''
-        RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Bursting Backpack", "Construct of Desolation", "Demacian Tellstones", "Facecheck", "Fae Sprout", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Stylish Shot", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Advanced Intel", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Cosmic Call", "Discreet Invitation", "En Garde", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Joy Unending", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Barbed Chain", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood",  "Glory's Call", "Mimic", "Nine Lives", "Place Your Bets", "Portalpalooza", "Rejuvenating Breeze", "The Time Has Come", "The Unforgiving Cold", "Aurora Porealis", "Celestial Trifecta", "Formula", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
+        RYZE_FOLLOWER_NAMES = ["Feral Prescience", "Warning Shot", "Bandle Tellstones", "Bilgewater Tellstones", "Bloodbait", "Bursting Backpack", "Construct of Desolation", "Demacian Tellstones", "Facecheck", "Fae Sprout", "Forgotten Artifact", "Heavens Aligned", "Imagined Possibilities", "Ionian Tellstones", "Jettison", "Jury-Rig", "Messenger's Sigil", "Mushroom Cloud", "Noxian Tellstones", "Piltovan Tellstones", "Ranger's Resolve", "Ransom Riches", "Sapling Toss", "Shadow Isles Tellstones", "Shroud of Darkness", "Shuriman Tellstones", "Spell Thief", "Stoneweaving", "Stress Testing", "Stylish Shot", "Sunborn Summoning", "Targonian Tellstones", "Tempting Prospect", "Three Sisters", "Trinket Trade", "Advanced Intel", "Allure", "Ancestral Boon", "Behold the Infinite", "Calculated Creations", "Cosmic Call", "Discreet Invitation", "En Garde", "Encore", "Entrapment", "Entreat", "Field Promotion", "Gifts From Beyond", "Icathian Myths", "Insight of Ages", "Line 'Em Up", "Magical Journey", "Payday", "Poro Stories", "Rite of Passage", "Shared Spoils", "Sown Seeds", "Starbone", "Supercool Starchart", "Swindle", "Time Trick", "Trail of Evidence", "Arise!", "Call the Wild", "Dragon's Clutch", "Fae Aid", "Flash of Brilliance", "Formal Invitation", "Joy Unending", "Lure of the Depths", "Mobilize", "Pilfered Goods", "Poro Snax", "Sap Magic", "Stalking Shadows", "Starlit Epiphany", "Unraveled Earth", "Vision", "Barbed Chain", "Encroaching Shadows", "Lost Riches", "Risen Mists", "Salvage", "Sneezy Biggledust!", "Stand Alone", "The Unending Wave", "Whispered Words", "Winter's Touch", "Catalyst of Aeons", "Deep Meditation", "Drum Solo", "Eye of Nagakabouros", "Gift of the Hearthblood", "Glory's Call", "Mimic", "Nine Lives", "Place Your Bets", "Portalpalooza", "Rejuvenating Breeze", "The Time Has Come", "The Unforgiving Cold", "Aurora Porealis", "Celestial Trifecta", "Formula", "Hextech Anomaly", "Hidden Pathways", "Sands of Time", "Shaman's Call", "Eclectic Collection", "Servitude of Desolation", "Spirit Fire", "Sputtering Songspinner", "Progress Day!", "Voices of the Old Ones"]
         self.format = format
         self.all_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
         self.collectible_cards_with_localization: Dict[str, List[CardData]] = {language: [] for language in LANGUAGES.values()}
@@ -76,7 +78,7 @@ class CardPool:
                             self.all_cards_with_localization[language].append(CardData(card))
                 else:
                     raise ConnectionError(f"Getting card set for {card_set} failed - Status Code: {r.status_code}")
-            
+
             logger.debug(f"CardPool for locale {language} initialized with {len(self.all_cards_with_localization[language])} total cards")
 
         # divide all cards in all languages into collectible and uncollectible cards
@@ -183,7 +185,7 @@ class CardPool:
             if card.card_code == card_code:
                 return card
         raise ValueError(f"No Card with card code {card_code} found")
-    
+
     def get_card_by_card_name(self, card_name: str, language: str = "en_us") -> CardData:
         for card in self.all_cards_with_localization[language]:
             if card_name.lower() == card.name.lower():
@@ -194,7 +196,7 @@ class CardPool:
         if language != DEFAULT_LOCALE:
             return self.get_card_by_card_name(card_name=card_name, language=DEFAULT_LOCALE)
         raise ValueError(f"No Card with card name {card_name} found")
-    
+
     def get_collectible_card_by_card_name(self, card_name: str, language: str = "en_us") -> CardData:
         for card in self.collectible_cards_with_localization[language]:
             if card_name.lower() == card.name.lower():

@@ -1,11 +1,14 @@
-from PIL import Image
-from CardData import CardData
 import urllib.request
 from typing import List, Tuple
-from CardPool import CardPool
-from playwright.async_api import async_playwright
+
 import discord
+from PIL import Image
+from playwright.async_api import async_playwright
+
+from CardData import CardData
+from CardPool import CardPool
 from Deck import Deck
+
 
 def assemble_card_image(card_pool: CardPool, card_name: str, language: str = "en_us") -> Tuple[discord.Embed, discord.File]:
     # Put image of the card and associated cards in one image and save it
@@ -29,6 +32,7 @@ def assemble_card_image(card_pool: CardPool, card_name: str, language: str = "en
     embed.set_image(url=f"attachment://{DISCORD_FILENAME}")
     return (embed, file)
 
+
 async def screenshot_deck_from_runeterrra_ar(screenshot_url: str):
     async with async_playwright() as playwright:
         firefox = playwright.firefox
@@ -37,6 +41,7 @@ async def screenshot_deck_from_runeterrra_ar(screenshot_url: str):
         await page.goto(screenshot_url, wait_until="networkidle")
         await page.locator("#screen.screencolor.imgbackdeck").screenshot(path="images/screenshot.png")
         await browser.close()
+
 
 def assemble_deck_embed(card_pool: CardPool, deckcode: str, language: str = "en_us") -> discord.Embed:
     DECKLINK_PREFIX: str = "https://runeterra.ar/decks/code/"
@@ -52,13 +57,12 @@ def assemble_deck_embed(card_pool: CardPool, deckcode: str, language: str = "en_
     equipments_and_landmarks = deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Equipment") + deck.get_cards_by_card_type_sorted_by_cost_and_alphabetical("Landmark")
     equipments_and_landmarks_formatted = card_list_to_string(card_pool=card_pool, card_list=equipments_and_landmarks, deck=deck, language=language)
 
-    embed=discord.Embed(title="Decklink runeterra.ar", url=deck_url)
+    embed = discord.Embed(title="Decklink runeterra.ar", url=deck_url)
     embed.add_field(name="Champions", value=champions_formatted, inline=True)
     embed.add_field(name="Follower", value=units_formatted, inline=True)
     embed.add_field(name="Spells", value=spells_formatted, inline=True)
     embed.add_field(name="Equipments and Landmarks", value=equipments_and_landmarks_formatted, inline=True)
     return embed
-
 
 
 def card_list_to_string(card_pool: CardPool, card_list: List[CardData], deck: Deck, language: str = "en_us") -> str:

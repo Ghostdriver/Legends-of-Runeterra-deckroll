@@ -1,8 +1,10 @@
-from typing import DefaultDict, List, Dict, Literal
 from collections import defaultdict
-from CardPool import CardPool
-from CardData import CardData, CARD_TYPES_COLLECTIBLE_CARDS
+from typing import DefaultDict, Dict, List, Literal
+
 import lor_deckcodes
+
+from CardData import CARD_TYPES_COLLECTIBLE_CARDS, CardData
+from CardPool import CardPool
 
 
 class Deck:
@@ -19,18 +21,18 @@ class Deck:
     @property
     def remaining_cards(self) -> int:
         return self.max_cards - self.amount_cards
-    
+
     @property
     def amount_champions(self) -> int:
         amount = 0
         for card in self.card_pool.all_champions:
             amount += self.cards_and_counts[card.card_code]
         return amount
-    
-    @property 
+
+    @property
     def remaining_champions(self) -> int:
         return self.max_champions - self.amount_champions
-    
+
     @property
     def deckcode(self) -> str:
         deck_formatted = []
@@ -62,7 +64,7 @@ class Deck:
                     if not card_is_a_runeterra_champion_follower:
                         regions.append(card.region_refs[0])
         return regions
-    
+
     @property
     def deck_sorted_by_card_type(self) -> Dict[str, List[CardData]]:
         deck_sorted_by_card_type = {}
@@ -76,7 +78,7 @@ class Deck:
                     else:
                         deck_sorted_by_card_type[card.card_type].append(card)
         return deck_sorted_by_card_type
-    
+
     def add_card_and_count(self, card_code: str, count: int) -> None:
         card = self.card_pool.get_card_by_card_code(card_code=card_code)
         if not (0 <= self.cards_and_counts[card_code] + count <= 3):
