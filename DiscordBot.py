@@ -287,7 +287,7 @@ class DiscordBot(discord.Client):
                     title=title, description=help_message, color=0xF90202
                 )
                 await message.channel.send(embed=embed)
-            # CARDROLLL
+            # CARDROLL
             elif message_content.startswith("!cardroll"):
                 format = await self._get_format(message_content=message_content)
                 # card pool and card weights based on format

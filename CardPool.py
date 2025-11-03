@@ -145,12 +145,13 @@ class CardPool:
 
         # Jhin
         for non_champion in self.all_non_champions:
-            for associated_card in non_champion.associated_card_refs:
-                for uncollectible_card in self.uncollectible_cards:
-                    if uncollectible_card.card_code == associated_card:
-                        if "Skill" in uncollectible_card.keyword_refs:
-                            self.jhin_followers.append(non_champion)
-                            break
+            if non_champion.card_type == "Unit":
+                for associated_card in non_champion.associated_card_refs:
+                    for uncollectible_card in self.uncollectible_cards:
+                        if uncollectible_card.card_code == associated_card:
+                            if "Skill" in uncollectible_card.keyword_refs:
+                                self.jhin_followers.append(non_champion)
+                                break
         logger.debug(f"CardPool initialized with {len(self.jhin_followers)} Cards for Jhin")
 
         # Kayn and Varus
